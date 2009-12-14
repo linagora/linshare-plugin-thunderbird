@@ -103,6 +103,12 @@ var linshare = {
   },
 
   onToolbarButtonCommand: function(e) {
+    // Open configuration dialog if it is not configured
+    if (!this._url) {
+      var features = "chrome,titlebar,centerscreen,modal";
+      window.openDialog("chrome://linshare/content/options.xul", "Preferences", features);
+    }
+
     var bucket=document.getElementById("attachmentBucket");
 
     //TODO: previously use TBird api to check mail?
