@@ -1,0 +1,12 @@
+<!ENTITY prefwindow.title "Configuration de LinShare">
+<!ENTITY pane1.title "Configuration de LinShare">
+<!ENTITY emailpref.description "Adresse email du compte LinShare">
+<!ENTITY emailpref.label "Adresse de messagerie :">
+<!ENTITY emailpref.accesskey "A">
+<!ENTITY urlpref.description "Adresse de l'application de partage LinShare">
+<!ENTITY urlpref.label "URL de LinShare :">
+<!ENTITY urlpref.accesskey "U">
+<!ENTITY messagepref.description "Message adressé en complément du votre dans les courriels adressés aux destinataires">
+<!ENTITY messagepref.comment "Ce message doit préciser aux destinataires la réception d'un deuxième courriel pour télécharger les fichiers.">
+<!ENTITY messagepref.label "Message LinShare :">
+<!ENTITY messagepref.accesskey "M">
