@@ -1,5 +1,5 @@
 <!ENTITY linshare.label "Configuration LinShare">
 <!ENTITY linshareContext.label "Configuration de LinShare">
 <!ENTITY linshareContext.accesskey "L">
-<!ENTITY linshareToolbar.label "Envoyer & Partager">
+<!ENTITY linshareToolbar.label "Envoyer &amp; Partager">
 <!ENTITY linshareToolbar.tooltip "Envoyer le message et les pièces jointes avec LinShare">
