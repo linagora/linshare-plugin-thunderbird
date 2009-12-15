@@ -136,27 +136,24 @@ var linshare = {
         bucket.removeChild(bucket.lastChild);
       }
       // append some text in body
-      if (!arg.messageAlreadyAdded) {
-        try {  
-          var editor = GetCurrentEditor();  
-          var editor_type = GetCurrentEditorType();  
-          editor.beginTransaction();  
-          editor.endOfDocument(); // seek to end 
-          if( editor_type == "textmail" || editor_type == "text" ) {  
-            editor.insertText( arg._message );  
-            editor.insertLineBreak();  
-          } else {  
-            editor.insertHTML( "<p>"+arg._message+"</p>" );  
-          }  
-          editor.endTransaction();
-          arg.messageAlreadyAdded = true; 
-        } catch(ex) {  
-          Components.utils.reportError(ex);  
-          return false;
-        }
+      //TODO: don't append text if it has already been
+      try {  
+        var editor = GetCurrentEditor();  
+        var editor_type = GetCurrentEditorType();  
+        editor.beginTransaction();  
+        editor.endOfDocument(); // seek to end 
+        if( editor_type == "textmail" || editor_type == "text" ) {  
+          editor.insertText( arg._message );  
+          editor.insertLineBreak();  
+        } else {  
+          editor.insertHTML( "<p>"+arg._message+"</p>" );  
+        }  
+        editor.endTransaction();
+      } catch(ex) {  
+        Components.utils.reportError(ex);  
+        return false;
       }
       GenericSendMessage(document.gIsOffLine ? nsIMsgCompDeliverMode.Later : nsIMsgCompDeliverMode.Now);
-      arg.messageAlreadyAdded = false;
     };
 
     var onCancelSend = function(arg) {
