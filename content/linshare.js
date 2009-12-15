@@ -137,20 +137,56 @@ var linshare = {
       }
       // append some text in body
       //TODO: don't append text if it has already been
-      try {  
-        var editor = GetCurrentEditor();  
-        var editor_type = GetCurrentEditorType();  
-        editor.beginTransaction();  
-        editor.endOfDocument(); // seek to end 
-        if( editor_type == "textmail" || editor_type == "text" ) {  
-          editor.insertText( arg._message );  
-          editor.insertLineBreak();  
-        } else {  
-          editor.insertHTML( "<p>"+arg._message+"</p>" );  
-        }  
+      try {
+        var editor = GetCurrentEditor();
+        var editor_type = GetCurrentEditorType();
+        editor.beginTransaction();
+        if( editor_type == "textmail" || editor_type == "text" ) {
+          // Try to find signature
+          var signature = null;
+          if (editor.document.body && editor.document.body.childNodes) {
+            var nodes = editor.document.body.childNodes;
+            for (var i=0; i<nodes.length; i++) {
+              if (nodes[i].nodeValue == "-- ") {
+                signature = nodes[i];
+                // no break; as we want the last one
+              }
+            }
+          }
+          if (signature) {
+            var myElement = editor.document.createElement("p");
+            myElement.innerHTML = arg._message;
+            editor.document.body.insertBefore(myElement, signature);
+          } else {
+            editor.endOfDocument();
+            editor.insertLineBreak();
+            editor.insertText( arg._message );
+            editor.insertLineBreak();
+          }
+        } else {
+          // Try to find signature
+          var signature = null;
+          if (editor.document.body && editor.document.body.childNodes) {
+            var nodes = editor.document.body.childNodes;
+            for (var i=0; i<nodes.length; i++) {
+              if (nodes[i].nodeName == "PRE") {
+                signature = nodes[i];
+                // no break; as we want the last one
+              }
+            }
+          }
+          if (signature) {
+            var myElement = editor.document.createElement("p");
+            myElement.innerHTML = arg._message;
+            editor.document.body.insertBefore(myElement, signature);
+          } else {
+            editor.endOfDocument();
+            editor.insertHTML( "<p>"+arg._message+"</p>" );
+          }
+        }
         editor.endTransaction();
-      } catch(ex) {  
-        Components.utils.reportError(ex);  
+      } catch(ex) {
+        Components.utils.reportError(ex);
         return false;
       }
       GenericSendMessage(document.gIsOffLine ? nsIMsgCompDeliverMode.Later : nsIMsgCompDeliverMode.Now);
