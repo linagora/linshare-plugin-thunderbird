@@ -156,6 +156,7 @@ var linshare = {
         }
       }
       GenericSendMessage(document.gIsOffLine ? nsIMsgCompDeliverMode.Later : nsIMsgCompDeliverMode.Now);
+      arg.messageAlreadyAdded = false;
     };
 
     var onCancelSend = function(arg) {
