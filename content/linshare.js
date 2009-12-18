@@ -233,18 +233,32 @@ var linshare = {
     }
 
     // Else get password in Password Manager
-    var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
-                                    .getService(Components.interfaces.nsIPasswordManager);
     if (!password) {
-      var passwords = passwordManager.enumerator;
-      while (passwords.hasMoreElements()) {
-        try {
-          var pass = passwords.getNext().QueryInterface(Components.interfaces.nsIPassword);
-          if (pass.host == url && pass.user == email) {
-               password = pass.password;
-               break;
+      var passwordManager = null;
+      var loginManager = null;
+      if ("@mozilla.org/passwordmanager;1" in Components.classes) { // TB 2.0
+        passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
+                                    .getService(Components.interfaces.nsIPasswordManager);
+        var passwords = passwordManager.enumerator;
+        while (passwords.hasMoreElements()) {
+          try {
+            var pass = passwords.getNext().QueryInterface(Components.interfaces.nsIPassword);
+            if (pass.host == url && pass.user == email) {
+                 password = pass.password;
+                 break;
+            }
+          } catch (e) {}
+        }
+      } else {  // TB 3
+        loginManager = Components.classes["@mozilla.org/login-manager;1"]
+                                 .getService(Components.interfaces.nsILoginManager);
+        var logins = loginManager.findLogins({}, url, url, null);
+        for (var i = 0; i < logins.length; i++) {
+          if (logins[i].username == email) {
+           password = logins[i].password;
+           break;
           }
-        } catch (e) {}
+        }
       }
     }
 
@@ -265,7 +279,15 @@ var linshare = {
 
       //TODO: should save only if successful
       if (mustSave.value) {
-        passwordManager.addUser(url, email, password);
+        if (passwordManager) { // TB 2.0
+          passwordManager.addUser(url, email, password);
+        } else { // TB 3
+          var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                             Components.interfaces.nsILoginInfo,
+                                             "init");
+          var loginInfo = new nsLoginInfo(url, url, null, email, password, "", "");
+          loginManager.addLogin(loginInfo);
+        }
       } else {
         hiddenWindow.linshareUrl = url;
         hiddenWindow.linshareEmail = email;
