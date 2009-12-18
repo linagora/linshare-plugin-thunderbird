@@ -105,8 +105,7 @@ var linshare = {
   onToolbarButtonCommand: function(e) {
     // Open configuration dialog if it is not configured
     if (!this._url) {
-      var features = "chrome,titlebar,centerscreen,modal";
-      window.openDialog("chrome://linshare/content/options.xul", "Preferences", features);
+      linshareConfig.openPrefWindow();
     }
 
     var bucket=document.getElementById("attachmentBucket");
@@ -197,20 +196,84 @@ var linshare = {
     };
 
     if (bucket.hasChildNodes()) {
-      //TODO: make it modal?
+      this._password = this._getPassword(this._url, this._email);
+      var features = "chrome,titlebar,toolbar,centerscreen,dialog,modal";
       window.openDialog("chrome://linshare/content/linshareSend.xul", "linshareSend",
-                        "chrome,centerscreen,titlebar", {
+                        features, {
                           url: this._url,
                           email: this._email,
+                          password: this._password,
                           bucket: bucket,
                           recipients: recipients
                         },
-                        onSuccessSend,
-                        onCancelSend,
                         this);
+      if (this.sendok) {
+        onSuccessSend(this);
+      } else {
+        onCancelSend(this);
+      }
     } else {
       GenericSendMessage(document.gIsOffLine ? nsIMsgCompDeliverMode.Later : nsIMsgCompDeliverMode.Now);
     }
+  },
+
+  _getPassword: function(url, email) {
+    var password = null;
+    // Get password in "session"
+    var hiddenWindow = Components.classes["@mozilla.org/appshell/appShellService;1"]
+         .getService(Components.interfaces.nsIAppShellService)
+         .hiddenDOMWindow;
+    if (hiddenWindow) {
+      if (hiddenWindow.linshareUrl && hiddenWindow.linshareEmail && hiddenWindow.linsharePassword) {
+        if (hiddenWindow.linshareUrl == url &&
+            hiddenWindow.linshareEmail == email) {
+          password = hiddenWindow.linsharePassword;
+        }
+      }
+    }
+
+    // Else get password in Password Manager
+    var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
+                                    .getService(Components.interfaces.nsIPasswordManager);
+    if (!password) {
+      var passwords = passwordManager.enumerator;
+      while (passwords.hasMoreElements()) {
+        try {
+          var pass = passwords.getNext().QueryInterface(Components.interfaces.nsIPassword);
+          if (pass.host == url && pass.user == email) {
+               password = pass.password;
+               break;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Else prompt for password
+    if (!password) {
+      var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                          .getService(Components.interfaces.nsIPromptService);
+      var input = {value: ""};
+      var mustSave = {value: false};
+      var promptRet = prompts.promptPassword(window, this.strings.getString("passwordTitle"),
+                                             this.strings.getString("passwordPrompt") + " " + email, input,
+                                             this.strings.getString("passwordCheck"), mustSave);
+      if (!promptRet) {
+        return null;
+      }
+
+      password = input.value;
+
+      //TODO: should save only if successful
+      if (mustSave.value) {
+        passwordManager.addUser(url, email, password);
+      } else {
+        hiddenWindow.linshareUrl = url;
+        hiddenWindow.linshareEmail = email;
+        hiddenWindow.linsharePassword = password;
+      }
+    }
+    return password;
+
   }
 
 };

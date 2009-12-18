@@ -20,71 +20,16 @@ var linshareSend = {
   onLoad: function() {
     this.url = window.arguments[0].url;
     this.email = window.arguments[0].email;
+    this.password = window.arguments[0].password;
     this.bucket = window.arguments[0].bucket;
     this.recipients = window.arguments[0].recipients.value;
 
-    this.onSuccess = window.arguments[1];
-    this.onCancel = window.arguments[2];
-    this.callbackArg = window.arguments[3];
+    this.callbackArg = window.arguments[1];
 
     this.ids = new Array();
     this.currentAttachment = 0;
 
     this.strings = document.getElementById("linshare-strings");
-
-    // Get password in "session"
-    var hiddenWindow = Components.classes["@mozilla.org/appshell/appShellService;1"]
-         .getService(Components.interfaces.nsIAppShellService)
-         .hiddenDOMWindow;
-    if (hiddenWindow) {
-      if (hiddenWindow.linshareUrl && hiddenWindow.linshareEmail && hiddenWindow.linsharePassword) {
-        if (hiddenWindow.linshareUrl == this.url &&
-            hiddenWindow.linshareEmail == this.email) {
-          this.password = hiddenWindow.linsharePassword;
-        }
-      }
-    }
-
-    // Else get password in Password Manager
-    var passwordManager = Components.classes["@mozilla.org/passwordmanager;1"]
-                                    .getService(Components.interfaces.nsIPasswordManager);
-    if (!this.password) {
-      var passwords = passwordManager.enumerator;
-      while (passwords.hasMoreElements()) {
-        try {
-          var pass = passwords.getNext().QueryInterface(Components.interfaces.nsIPassword);
-          if (pass.host == this.url && pass.user == this.email) {
-               this.password = pass.password;
-               break;
-          }
-        } catch (e) {}
-      }
-    }
-
-    // Else prompt for password
-    if (!this.password) {
-      var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                          .getService(Components.interfaces.nsIPromptService);
-      var input = {value: ""};
-      var mustSave = {value: false};
-      var promptRet = prompts.promptPassword(window, this.strings.getString("passwordTitle"),
-                                             this.strings.getString("passwordPrompt") + " " + this.email, input,
-                                             this.strings.getString("passwordCheck"), mustSave);
-      if (!promptRet) {
-        return this.cancel(this);
-      }
-
-      this.password = input.value;
-
-      //TODO: should save only if successful
-      if (mustSave.value) {
-        passwordManager.addUser(this.url, this.email, this.password);
-      } else {
-        hiddenWindow.linshareUrl = this.url;
-        hiddenWindow.linshareEmail = this.email;
-        hiddenWindow.linsharePassword = this.password;
-      }
-    }
 
     // Initialize progress meter
     var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
@@ -97,15 +42,15 @@ var linshareSend = {
     this.max = max;
     this.current = 0;
 
-    return this._createDocument(this.bucket.childNodes[this.currentAttachment].attachment, this._createDocumentCB, this);
+    this._createDocument(this.bucket.childNodes[this.currentAttachment].attachment, this._createDocumentCB, this);
   },
 
   _createDocumentCB: function(arg) {
     arg.currentAttachment++;
     if (arg.currentAttachment >= arg.bucket.childNodes.length) {
-      return arg._sendDocuments(arg);
+      arg._sendDocuments(arg);
     } else {
-      return arg._createDocument(arg.bucket.childNodes[arg.currentAttachment].attachment, arg._createDocumentCB, arg);
+      arg._createDocument(arg.bucket.childNodes[arg.currentAttachment].attachment, arg._createDocumentCB, arg);
     }
   },
 
@@ -202,7 +147,7 @@ var linshareSend = {
                                           .getService(Components.interfaces.nsIPromptService);
             promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                                 arg.strings.getString("sendError") + " " + attachment.name);
-            return arg.cancel(arg);
+            arg.cancel(arg);
     }
     arg.request = request;
   },
@@ -214,7 +159,7 @@ var linshareSend = {
     progressMeter.mode = "undetermined";
 
     if (arg.ids.length == 0) {
-      return arg.cancel(arg);
+      arg.cancel(arg);
     }
 
     // request to send LinShare documents
@@ -244,15 +189,15 @@ var linshareSend = {
       }
     }
 
-    window.close();
-    return arg.onSuccess(arg.callbackArg);
+    arg.callbackArg.sendok = true;
+    window.setTimeout('window.close();',100);  
   },
 
   cancel: function(arg) {
     if (arg.request != null) {
       arg.request.abort();
     }
-    window.close();
-    return arg.onCancel(arg.callbackArg);
+    arg.callbackArg.sendok = false;
+    window.setTimeout('window.close();',100);  
   }
 };

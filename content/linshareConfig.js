@@ -17,8 +17,24 @@
 */
 
 var linshareConfig = {
+  openPrefWindow: function() {
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var win = wm.getMostRecentWindow("linsharePreferences");
+    if (win) {
+      win.focus();
+      win.getAttention();
+    } else {
+      var instantApply = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefService)
+                             .getBranch("browser.preferences.")
+                             .getBoolPref("instantApply", false);
+      var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : "") + ",modal";
+      window.openDialog("chrome://linshare/content/options.xul", "linsharePreferences", features);
+    }
+  },
+
   onMenuItemCommand: function(e) {
-    var features = "chrome,titlebar,centerscreen,modal";
-    window.openDialog("chrome://linshare/content/options.xul", "Preferences", features);
+    linshareConfig.openPrefWindow();
   }
 };
