@@ -1,4 +1,15 @@
 ChangeLog for LinShare plugin for ThunderBird
 
+2009-12-18 - v1.1
+	* Add thunderbird 3.0 compatibility
+	* Fix Mac OS integration
+	* Display message before signature
+	* Fix some cases where custom message was not added
+	* Ask for configuration if the add-on is not already configuration
+	* Shorten button's label
+	* Move built files to a proper place
+	* Default button position is now just after "Send", not before
+	* Change icon in add-on menu
+
 2009-12-14 - v1.0
 	* First release
