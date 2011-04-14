@@ -91,8 +91,10 @@ var linshareSend = {
     header += "\r\n";
     header += "--" + BOUNDARY + "\r\n";
     //TODO: check file name encoding: using file.leafName is not sufficient
-    header += "Content-disposition: form-data;name=\"file\";filename=\"" + attachment.name + "\"\r\n";
-    header += "Content-Type: " + contentType + "\r\n";
+    // Bug #139 Adding unescape(encodeURIComponent fixed the bug
+    // Only works with Linshare >= 0.8.4
+    header += "Content-disposition: form-data;name=\"file\";filename=\"" + unescape( encodeURIComponent( attachment.name ) )  + "\"\r\n";
+    header += "Content-Type: " + contentType + "; charset=UTF-8 \r\n";
     header += "Content-Length: " + file.fileSize + "\r\n\r\n";
 
     headerStream.setData(header, header.length);
@@ -126,15 +128,34 @@ var linshareSend = {
             return;
           }
           if (request.status == 201) {
-            arg.ids.push(request.responseXML.documentElement.getElementsByTagName("identifier")[0].textContent);
+            // If the xml response is incorrect then display an error message and abort
+	    try {
+            	arg.ids.push(request.responseXML.documentElement.getElementsByTagName("identifier")[0].textContent);
+	    }catch(e) {
+            	var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                          .getService(Components.interfaces.nsIPromptService);
+            	promptService.alert(window, arg.strings.getString("sendErrorTitle"),
+                                arg.strings.getString("sendError") + " " + attachment.name);
+            	arg.cancel(arg);
+                event.preventDefault("compose-send-message");
+	    }
+          } else if (request.status == 420) {
+            // Bug #126
+            // If the quota is exceeded then display an error message and abort	
+            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                          .getService(Components.interfaces.nsIPromptService);
+            promptService.alert(window, arg.strings.getString("sendErrorTitle"),
+                                arg.strings.getString("sendErrorQuota") + " " + attachment.name);  	  
           } else {
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
             promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                                 arg.strings.getString("sendError") + " " + attachment.name);
+            		
           }
-          arg.request = null;
-          callback(arg);
+          arg.cancel(arg);
+          // don't propagate the event compose-send-message, ie: send the message
+          event.preventDefault("compose-send-message");
         }
     };
     request.setRequestHeader("Content-Length", multiStream.available());
