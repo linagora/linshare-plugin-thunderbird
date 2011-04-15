@@ -131,13 +131,17 @@ var linshareSend = {
             // If the xml response is incorrect then display an error message and abort
 	    try {
             	arg.ids.push(request.responseXML.documentElement.getElementsByTagName("identifier")[0].textContent);
+                arg.request = null;
+                callback(arg);
 	    }catch(e) {
             	var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
             	promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                                 arg.strings.getString("sendError") + " " + attachment.name);
             	arg.cancel(arg);
+                // don't propagate the event compose-send-message, ie: send the message
                 event.preventDefault("compose-send-message");
+                
 	    }
           } else if (request.status == 420) {
             // Bug #126
@@ -145,17 +149,20 @@ var linshareSend = {
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
             promptService.alert(window, arg.strings.getString("sendErrorTitle"),
-                                arg.strings.getString("sendErrorQuota") + " " + attachment.name);  	  
+                                arg.strings.getString("sendErrorQuota") + " " + attachment.name);
+            arg.cancel(arg);
+            // don't propagate the event compose-send-message, ie: send the message
+            event.preventDefault("compose-send-message");ar  	  
           } else {
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
             promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                                 arg.strings.getString("sendError") + " " + attachment.name);
-            		
+            arg.cancel(arg);
+            // don't propagate the event compose-send-message, ie: send the message
+            event.preventDefault("compose-send-message");		
           }
-          arg.cancel(arg);
-          // don't propagate the event compose-send-message, ie: send the message
-          event.preventDefault("compose-send-message");
+          
         }
     };
     request.setRequestHeader("Content-Length", multiStream.available());
