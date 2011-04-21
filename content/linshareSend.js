@@ -152,7 +152,7 @@ var linshareSend = {
                                 arg.strings.getString("sendErrorQuota") + " " + attachment.name);
             arg.cancel(arg);
             // don't propagate the event compose-send-message, ie: send the message
-            event.preventDefault("compose-send-message");ar  	  
+            event.preventDefault("compose-send-message");	  
           } else {
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
