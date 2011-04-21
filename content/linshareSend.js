@@ -176,6 +176,8 @@ var linshareSend = {
             promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                                 arg.strings.getString("sendError") + " " + attachment.name);
             arg.cancel(arg);
+            // don't propagate the event compose-send-message, ie: send the message
+            event.preventDefault("compose-send-message");
     }
     arg.request = request;
   },
@@ -214,6 +216,8 @@ var linshareSend = {
                                       .getService(Components.interfaces.nsIPromptService);
         promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                             arg.strings.getString("sendErrorRecipient") + " " + arg.recipients[recip]);
+        // don't propagate the event compose-send-message, ie: send the message
+        event.preventDefault("compose-send-message");
       }
     }
 
