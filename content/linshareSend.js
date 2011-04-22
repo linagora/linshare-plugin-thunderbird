@@ -53,7 +53,11 @@ var linshareSend = {
       arg._createDocument(arg.bucket.childNodes[arg.currentAttachment].attachment, arg._createDocumentCB, arg);
     }
   },
-
+  _removeSlashes: function(string) {
+     var searchFor = "/";
+     var RegEx = new RegExp("(" + searchFor + "){2,}", "i");
+     return string.replace(RegEx, searchFor);
+  }
   _createDocument: function(attachment, callback, arg) {
     var statusLabel = document.getElementById("status");
     statusLabel.value = arg.strings.getString("sendLabel") + " " + attachment.name;
@@ -113,7 +117,7 @@ var linshareSend = {
     var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                             .createInstance(Components.interfaces.nsIXMLHttpRequest);
     //alert("Url :"+arg.url);
-    request.open("POST", arg.url + "/documentrestservice/uploadfile", true, arg.email, arg.password);
+    request.open("POST", this._removeSlashes(arg.url) + "/documentrestservice/uploadfile", true, arg.email, arg.password);
     //TODO: it is impossible with 2.0 to catch 401 error (mozBackgroundRequest is not available)
     // So maybe we should change linShare not to return 401, or use only that to keep passwords
     // In fact this is a bug, see https://bugzilla.mozilla.org/show_bug.cgi?id=282547
