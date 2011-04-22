@@ -23,10 +23,10 @@
   <script src="linshareConfig.js"/>
   <script src="linshare.js"/>
   <script src="linshareSend.js"/>
-  <script src="send-message-overlay.js"/>
+  <!--script src="send-message-overlay.js"/-->
   <stringbundleset id="stringbundleset">
     <stringbundle id="linshare-strings" src="chrome://linshare/locale/linshare.properties"/>
-    <stringbundle id="linshare-config" src="chrome://linshare/config.properties" />
+    <!--stringbundle id="linshare-config" src="chrome://linshare/config.properties" /-->
   </stringbundleset>
 
   <menupopup id="taskPopup">
