@@ -112,6 +112,7 @@ var linshareSend = {
 
     var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                             .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    //alert("Url :"+arg.url);
     request.open("POST", arg.url + "/documentrestservice/uploadfile", true, arg.email, arg.password);
     //TODO: it is impossible with 2.0 to catch 401 error (mozBackgroundRequest is not available)
     // So maybe we should change linShare not to return 401, or use only that to keep passwords
@@ -134,13 +135,14 @@ var linshareSend = {
                 arg.request = null;
                 callback(arg);
 	    }catch(e) {
-            	var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                alert(e);
+            	/*var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
             	promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                                 arg.strings.getString("sendError") + " " + attachment.name);
             	arg.cancel(arg);
                 // don't propagate the event compose-send-message, ie: send the message
-                event.preventDefault("compose-send-message");
+                event.preventDefault("compose-send-message");*/
                 
 	    }
           } else if (request.status == 420) {
@@ -152,7 +154,7 @@ var linshareSend = {
                                 arg.strings.getString("sendErrorQuota") + " " + attachment.name);
             arg.cancel(arg);
             // don't propagate the event compose-send-message, ie: send the message
-            event.preventDefault("compose-send-message");	  
+            event.preventDefault("compose-send-message");
           } else {
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
@@ -160,7 +162,7 @@ var linshareSend = {
                                 arg.strings.getString("sendError") + " " + attachment.name);
             arg.cancel(arg);
             // don't propagate the event compose-send-message, ie: send the message
-            event.preventDefault("compose-send-message");		
+            event.preventDefault("compose-send-message");	
           }
           
         }
@@ -174,7 +176,7 @@ var linshareSend = {
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
             promptService.alert(window, arg.strings.getString("sendErrorTitle"),
-                                arg.strings.getString("sendError") + " " + attachment.name);
+                                arg.strings.getString("sendError") + " " + attachment.name );
             arg.cancel(arg);
             // don't propagate the event compose-send-message, ie: send the message
             event.preventDefault("compose-send-message");
@@ -216,8 +218,6 @@ var linshareSend = {
                                       .getService(Components.interfaces.nsIPromptService);
         promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                             arg.strings.getString("sendErrorRecipient") + " " + arg.recipients[recip]);
-        // don't propagate the event compose-send-message, ie: send the message
-        event.preventDefault("compose-send-message");
       }
     }
 
