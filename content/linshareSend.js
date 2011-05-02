@@ -140,13 +140,13 @@ var linshareSend = {
                 callback(arg);
 	    }catch(e) {
                 alert(e);
-            	/*var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+            	var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                           .getService(Components.interfaces.nsIPromptService);
             	promptService.alert(window, arg.strings.getString("sendErrorTitle"),
                                 arg.strings.getString("sendError") + " " + attachment.name);
             	arg.cancel(arg);
                 // don't propagate the event compose-send-message, ie: send the message
-                event.preventDefault("compose-send-message");*/
+                event.preventDefault("compose-send-message");
                 
 	    }
           } else if (request.status == 420) {

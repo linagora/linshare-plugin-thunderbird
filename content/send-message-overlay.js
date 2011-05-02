@@ -3,7 +3,7 @@
 var SendMessageOriginal = SendMessage;
 var SendMessage = function() {
   var strings = document.getElementById("linshare-option");
-  var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
+  var isActive = strings.getString("autoAttachmentWithLinshare");
   if(isActive == "true") {
     if(MySendMessage.sendingBigFileWithLinshare())
   	SendMessageOriginal.apply(this, arguments);  
@@ -20,7 +20,7 @@ var SendMessage = function() {
 var SendMessageWithCheckOriginal = SendMessageWithCheck;
 var SendMessageWithCheck = function () {
   var strings = document.getElementById("linshare-option");
-  var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
+  var isActive = strings.getString("autoAttachmentWithLinshare");
   if(isActive == "true") {
     if(MySendMessage.sendingBigFileWithLinshare())
   	SendMessageWithCheckOriginal.apply(this, arguments);  
@@ -37,6 +37,18 @@ var MySendMessage = {
     var strings = document.getElementById("linshare-option");
     if(!bucket.hasChildNodes())
 	return true;
+
+    var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var fileProtocolHandler = ioservice.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+    var sum = 0;
+    for (var i=0; i<bucket.childNodes.length; i++) {
+      var file = fileProtocolHandler.getFileFromURLSpec(bucket.childNodes[i].attachment.url);
+      sum += file.fileSize;
+    }
+    if(sum < (1024*parseInt(strings.getString("autoAttachmentMinimumInKB"))) )
+      return true;
+
+
     /*var max = 0;
     for (var i=0; i<this.bucket.childNodes.length; i++) {
       var file = fileProtocolHandler.getFileFromURLSpec(this.bucket.childNodes[i].attachment.url);
@@ -75,15 +87,7 @@ var MySendMessage = {
                           strings.getString("noRecipient"));
       return;
     }
-    var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-    var fileProtocolHandler = ioservice.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-    var sum = 0;
-    for (var i=0; i<bucket.childNodes.length; i++) {
-      var file = fileProtocolHandler.getFileFromURLSpec(bucket.childNodes[i].attachment.url);
-      sum += file.fileSize;
-    }
-    if(sum < (1024*parseInt(strings.getString("extensions.linshare.autoAttachmentMinimumInKB"))) )
-      return true;
+    
     _message = prefs.getComplexValue("message", Components.interfaces.nsIPrefLocalizedString).data;
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect'); 
     var features = "chrome,titlebar,toolbar,centerscreen,dialog,modal";
