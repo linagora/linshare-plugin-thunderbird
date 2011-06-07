@@ -3,7 +3,7 @@
 var SendMessageOriginal = SendMessage;
 var SendMessage = function() {
   var strings = document.getElementById("linshare-option");
-  var isActive = strings.getString("autoAttachmentWithLinshare");
+  var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
   if(isActive == "true") {
     if(MySendMessage.sendingBigFileWithLinshare())
   	SendMessageOriginal.apply(this, arguments);  
@@ -20,7 +20,7 @@ var SendMessage = function() {
 var SendMessageWithCheckOriginal = SendMessageWithCheck;
 var SendMessageWithCheck = function () {
   var strings = document.getElementById("linshare-option");
-  var isActive = strings.getString("autoAttachmentWithLinshare");
+  var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
   if(isActive == "true") {
     if(MySendMessage.sendingBigFileWithLinshare())
   	SendMessageWithCheckOriginal.apply(this, arguments);  
@@ -45,7 +45,7 @@ var MySendMessage = {
       var file = fileProtocolHandler.getFileFromURLSpec(bucket.childNodes[i].attachment.url);
       sum += file.fileSize;
     }
-    if(sum < (1024*parseInt(strings.getString("autoAttachmentMinimumInKB"))) )
+    if(sum < (1024*parseInt(strings.getString("extensions.linshare.autoAttachmentMinimumInKB"))) )
       return true;
 
 

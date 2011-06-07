@@ -24,7 +24,7 @@
     <stringbundle id="linshare-strings" src="chrome://linshare/locale/linshare.properties"/>
   </stringbundleset>  
   <spacer flex="1" />
-  <progressmeter id="progressmeter" mode="determined" height="30" />
+  <progressmeter id="progressmeter" mode="undetermined" height="30" />
   <spacer flex="1" />
   <label id="status" value="&linshareSend.nostatus;"/>
   <spacer flex="1" />

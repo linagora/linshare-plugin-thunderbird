@@ -13,4 +13,4 @@ else
   echo "extensions.linshare.autoAttachmentWithLinshare.active=false" >> config.properties
   echo "Done. Run build.sh for generating the extension"
 fi
-
+cp config.properties content/
