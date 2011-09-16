@@ -4,4 +4,5 @@ locale	linshare	fr-FR	locale/fr-FR/
 skin	linshare	classic/1.0	skin/
 overlay	chrome://messenger/content/messenger.xul	chrome://linshare/content/thunderbirdOverlay.xul
 overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://linshare/content/composerOverlay.xul
+overlay	chrome://messenger/content/messengercompose/messengercompose.xul	chrome://linshare/content/messengercomposeOverlay.xul
 style	chrome://global/content/customizeToolbar.xul	chrome://linshare/skin/linshare.css
