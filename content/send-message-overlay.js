@@ -1,34 +1,37 @@
-//override the default SendMessage function from "MsgComposeCommands.js"
-//SendMessage function gets called when you click the "Send" button
-var SendMessageOriginal = SendMessage;
-var SendMessage = function() {
-  var strings = document.getElementById("linshare-option");
-  var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
-  if(isActive == "true") {
-    if(MySendMessage.sendingBigFileWithLinshare())
-  	SendMessageOriginal.apply(this, arguments);  
-  }
-  else {
-     SendMessageOriginal.apply(this, arguments);  
-  }
-  
-};
+// window.addEventListener("load", function(e) { 
+	//override the default SendMessage function from "MsgComposeCommands.js"
+	//SendMessage function gets called when you click the "Send" button
+	var SendMessageOriginal = SendMessage;
+	SendMessage = function() {
+	var strings = document.getElementById("linshare-option");
+	var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
+	if(isActive == "true") {
+		if(MySendMessage.sendingBigFileWithLinshare())
+		SendMessageOriginal.apply(this, arguments);  
+	}
+	else {
+		SendMessageOriginal.apply(this, arguments);  
+	}
+	};
 
-//override the default SendMessageWithCheck function from "MsgComposeCommands.js"
-//SendMessageWithCheck function gets called when you use a keyboard shortcut,
-//such as Ctl-Enter (default), to send the message
-var SendMessageWithCheckOriginal = SendMessageWithCheck;
-var SendMessageWithCheck = function () {
-  var strings = document.getElementById("linshare-option");
-  var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
-  if(isActive == "true") {
-    if(MySendMessage.sendingBigFileWithLinshare())
-  	SendMessageWithCheckOriginal.apply(this, arguments);  
-  }
-  else {
-     SendMessageWithCheckOriginal.apply(this, arguments);  
-  }
-};
+	//override the default SendMessageWithCheck function from "MsgComposeCommands.js"
+	//SendMessageWithCheck function gets called when you use a keyboard shortcut,
+	//such as Ctl-Enter (default), to send the message
+	var SendMessageWithCheckOriginal = SendMessageWithCheck;
+	SendMessageWithCheck = function () {
+	var strings = document.getElementById("linshare-option");
+	var strbundle = document.getElementById("strings");
+	var nofilesfound=strbundle.getString("notFoundAlert");
+	var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
+	if(isActive == "true") {
+		if(MySendMessage.sendingBigFileWithLinshare())
+		SendMessageWithCheckOriginal.apply(this, arguments);  
+	}
+	else {
+		SendMessageWithCheckOriginal.apply(this, arguments);  
+	}
+	};
+// }, false);
 
 var MySendMessage = {
   sendingBigFileWithLinshare: function() {
@@ -49,11 +52,6 @@ var MySendMessage = {
       return true;
 
 
-    /*var max = 0;
-    for (var i=0; i<this.bucket.childNodes.length; i++) {
-      var file = fileProtocolHandler.getFileFromURLSpec(this.bucket.childNodes[i].attachment.url);
-      max += file.fileSize;
-    }*/
     prefs = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefService)
                     .getBranch("extensions.linshare.");
