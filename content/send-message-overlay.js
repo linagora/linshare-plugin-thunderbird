@@ -20,8 +20,6 @@
 	var SendMessageWithCheckOriginal = SendMessageWithCheck;
 	SendMessageWithCheck = function () {
 	var strings = document.getElementById("linshare-option");
-	var strbundle = document.getElementById("strings");
-	var nofilesfound=strbundle.getString("notFoundAlert");
 	var isActive = strings.getString("extensions.linshare.autoAttachmentWithLinshare.active");
 	if(isActive == "true") {
 		if(MySendMessage.sendingBigFileWithLinshare())
