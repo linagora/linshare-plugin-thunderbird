@@ -4,7 +4,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>linshare@linagora</em:id>
     <em:name>LinShare</em:name>
-    <em:version>1.5</em:version>
+    <em:version>1.6</em:version>
     <em:creator>Linagora</em:creator>
     <em:contributor>Raphael Ouazana</em:contributor>
     <em:description>Send attachments with LinShare</em:description>
@@ -15,7 +15,7 @@
       <Description>
         <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id> <!-- thunderbird -->
         <em:minVersion>2.0</em:minVersion>
-        <em:maxVersion>17.*</em:maxVersion>
+        <em:maxVersion>24.*</em:maxVersion>
       </Description>
     </em:targetApplication>
   </Description>

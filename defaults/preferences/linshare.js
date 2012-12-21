@@ -19,3 +19,4 @@
 pref("extensions.linshare.message", "chrome://linshare/locale/linshare.properties");
 // See http://kb.mozillazine.org/Localize_extension_descriptions
 pref("extensions.linshare@linagora.description", "chrome://linshare/locale/linshare.properties");
+pref("extensions.linshare.server.api.version", 1);
