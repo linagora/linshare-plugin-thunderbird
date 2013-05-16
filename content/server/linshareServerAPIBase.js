@@ -74,7 +74,10 @@ LinshareServerAPIBase.prototype = {
         var slash = "/";
         var regEx = new RegExp("(" + slash + "){2,}", "i");
         
-        return url.replace(regEx, slash);
+	// removing double '/'
+        newUrl = url.replace(regEx, slash);
+	// removing last '/'
+	return newUrl.replace(/\/$/,'');
     },
     
     openFile: function (url) {
