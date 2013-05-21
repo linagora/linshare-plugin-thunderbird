@@ -25,6 +25,7 @@ if ( typeof(LinshareServerAPIBase) == "undefined" ) {
 }
 
 function LinshareServerAPIv2() {
+	this.logInfo("using api : linshareServerAPIv2");
 }
 
 LinshareServerAPIv2.prototype = {

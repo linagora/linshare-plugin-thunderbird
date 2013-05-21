@@ -24,45 +24,62 @@ if ( typeof(LinshareServerAPIBase) == "undefined" ) {
     scriptLoader.loadSubScript("chrome://linshare/content/server/linshareServerAPIBase.js");
 }
 
-function LinshareServerAPIv1() {
-	this.logInfo("using api : linshareServerAPIv1");
+function linshareServerAPIv2TB2x() {
+	this.logInfo("using api : linshareServerAPIv2TB2x");
 }
 
-LinshareServerAPIv1.prototype = {
+
+linshareServerAPIv2TB2x.prototype = {
     __proto__: new LinshareServerAPIBase(),
     
+
     uploadFileUrl: function (url) {
-        return url + "/documentrestservice/uploadfile";
+        return url + "/webservice/rest/document/upload";
     },
     
     multipleShareDocumentsUrl: function (url) {
-        return url + "/sharerestservice/multiplesharedocuments";
+        return url + "/webservice/rest/share/multiplesharedocuments";
     },
-    
-    pluginInfoUrl: function (url) {
-        return url + "/webservice/rest/plugin/information";
-    },
-    
+
+
+
     uploadFile: function (serverInfo, attachment, callback) {        
         var file = this.openFile(attachment.url);
         var request = this.newFileUploadRequest(file, attachment.name, this.uploadFileUrl(serverInfo.url), true, serverInfo.username, serverInfo.password);
         
-        //TODO: it is impossible with 2.0 to catch 401 error (mozBackgroundRequest is not available)
-        // So maybe we should change linShare not to return 401, or use only that to keep passwords
-        // In fact this is a bug, see https://bugzilla.mozilla.org/show_bug.cgi?id=282547
+	this.logInfo('uploading a file : ' + attachment.name);
+        request.setRequestHeader("Accept", "application/json");
         request.onreadystatechange = function (e) {
             if (request.readyState == 4) {
-                if (request.status == 201) {
-                    // If the xml response is incorrect then display an error message and abort
+                if (request.status == 200) {
                     try {
-                        var doc = request.responseXML.documentElement;
-                        var id = doc.getElementsByTagName("identifier")[0].textContent;
-                        
-                        callback.success(id, file);
+//			request.logInfo('request attributes :');
+//			for(var propertyName in request) {
+//				request.logInfo(propertyName);
+//				request.logInfo(request[propertyName]);
+//			}
+			request.logInfo(request.responseText);
+			// JSON object is not supported by Thunderbird 2.
+			var uuid;
+			var resp = request.responseText.replace('\{','').replace('\}','');
+			var tab1 = resp.split('\,');
+		        for (var i=0; i < tab1.length; i++) {
+				var tab2 = tab1[i].split(':');
+				if (tab2[0] == '"uuid"') {
+				        var regEx = new RegExp('(")', "gi");
+					uuid = tab2[1].replace(regEx , "");
+					break;
+				}
+			}
+			request.logInfo("uploaded doc uuid : " + uuid)
+                        callback.success(uuid, file);
+			
                     } catch(e) {
+			request.logError('error parsing request result : ' + e );
                         callback.error(request.status, e);
                     }
                 } else {
+		    request.logError('request failed, errCode : ' + request.status);
                     callback.error(request.status);
                 }
             }
@@ -71,6 +88,7 @@ LinshareServerAPIv1.prototype = {
         try {
             request.sendFile();
         } catch(e) {
+            this.logError('request failed ' + e);
             callback.error(-1, e);
         }
         
@@ -81,12 +99,9 @@ LinshareServerAPIv1.prototype = {
         var fileParams = "";
         
         for (var i=0; i < fileIds.length; i++) {
-            if (i==0) {
-                fileParams = "&file=" + fileIds[i];
-            } else {
-                fileParams += "&file" + i + "=" + fileIds[i];
-            }
+            fileParams += "&file=" + fileIds[i];
         }
+
 
         var params = "targetMail=" + recipient + fileParams;
         var request = this.newRequest("POST", this.multipleShareDocumentsUrl(serverInfo.url), false, serverInfo.username, serverInfo.password);
@@ -96,19 +111,6 @@ LinshareServerAPIv1.prototype = {
         request.setRequestHeader("Connection", "close");
         request.send(params);
         
-        return request.status == 200;
-    },
-    
-    shouldSwitchVersion: function (serverInfo) {
-        var request = this.newRequest("GET", this.pluginInfoUrl(serverInfo.url), false, serverInfo.username, serverInfo.password);
-        
-        request.setRequestHeader("Accept", "application/json");
-        request.send(null); // No parameters
-        
-        return request.status == 200;
-    },
-    
-    nextVersion: function () {
-        return 2;
+        return request.status == 204;
     }
 };

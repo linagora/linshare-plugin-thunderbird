@@ -29,14 +29,35 @@ LinshareServerAPIBase.prototype = {
     mMimeService: Components
                     .classes["@mozilla.org/mime;1"]
                     .getService(Components.interfaces.nsIMIMEService),
-                    
+
+    console: Components.classes["@mozilla.org/consoleservice;1"]
+                     .getService(Components.interfaces.nsIConsoleService),
+
+
+    logInfo: function (message) {
+    	this.console.logStringMessage("LinShare: " + message);
+    },
+
+    logError: function (message) {
+	Components.utils.reportError("LinShare: " + message);
+    },
+
+
     newRequest: function (method, url, async, username, password) {
         var request =  Components
                             .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                             .createInstance(Components.interfaces.nsIXMLHttpRequest);
         
         request.open(method, this.removeSlashes(url), async, username, password);
-        
+	request.logInfo = function ( message) {
+		var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+                                 .getService(Components.interfaces.nsIConsoleService);
+		consoleService.logStringMessage("LinShare: " + message);
+	};
+	request.logError = function ( message) {
+		Components.utils.reportError("LinShare: " + message);
+	};
+
         return request;
     },
     
@@ -71,13 +92,13 @@ LinshareServerAPIBase.prototype = {
     },
     
     removeSlashes: function (url) {
+	//this.logInfo("url : " + url);
+	return url;
+	// why this code ? at this time ?
         var slash = "/";
         var regEx = new RegExp("(" + slash + "){2,}", "i");
-        
 	// removing double '/'
         newUrl = url.replace(regEx, slash);
-	// removing last '/'
-	return newUrl.replace(/\/$/,'');
     },
     
     openFile: function (url) {
@@ -132,5 +153,8 @@ LinshareServerAPIBase.prototype = {
     },
     
     nextVersion: function () {
-    }
+    },
+
+
+
 };
