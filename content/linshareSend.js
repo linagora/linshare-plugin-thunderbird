@@ -20,7 +20,7 @@ var DEFAULT_SERVER_API_VERSION = 1;
 
 var linshareSend = {
   onLoad: function() {
-    this.url = window.arguments[0].url;
+    this.url = this.cleanUrl(window.arguments[0].url);
     this.email = window.arguments[0].email;
     this.password = window.arguments[0].password;
     this.bucket = window.arguments[0].bucket;
@@ -59,7 +59,7 @@ var linshareSend = {
   
   loadServerAPIImplementation: function () {
       var version = this.serverAPIVersion;
-      
+
       switch (version) {
           case 1:
               if ( typeof(LinshareServerAPIv1) == "undefined" ) {
@@ -69,6 +69,12 @@ var linshareSend = {
               
               break;
           case 2:
+              if(this.isThunderbirdBranch2()) {
+                  if ( typeof(linshareServerAPIv2TB2x) == "undefined" ) {
+                      this.scriptLoader.loadSubScript("chrome://linshare/content/server/linshareServerAPIv2TB2x.js");
+                  }
+                  return new linshareServerAPIv2TB2x();
+              }
               if ( typeof(LinshareServerAPIv2) == "undefined" ) {
                   this.scriptLoader.loadSubScript("chrome://linshare/content/server/linshareServerAPIv2.js");
               }
@@ -79,7 +85,20 @@ var linshareSend = {
               throw "Unsupported server API version '" + version + "'";
       }
   },
-  
+
+  cleanUrl: function (url) {
+    var slash = "/";
+    var regEx = new RegExp("(" + slash + "){2,}", "ig");
+    // removing double slash
+    var url1 = url.replace(regEx, slash);
+    // removing spaces at the beginning and the end of the url.
+    var url2 = url1.replace(/^\s+|\s+$/g, '');
+    // removing last slash if it exists
+    url1 = url2.replace(/\/$/g,'');
+    // replacing http:/ by http:// due to the cleaning of double slash
+    return url1.replace(/:\//g,'://');
+  },
+
   get serverInfo() {
       return {
           url: this.url,
@@ -95,6 +114,28 @@ var linshareSend = {
           return DEFAULT_SERVER_API_VERSION;
       }
   },
+
+  isThunderbirdBranch2: function () {
+      var version;
+      if ( "@mozilla.org/xre/app-info;1" in Components.classes )
+        version = Components.classes["@mozilla.org/xre/app-info;1"]
+                      .getService(Components.interfaces.nsIXULAppInfo).version;
+      else
+        version = Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch).getCharPref("app.version");
+      //dump("thunderbird version: " + version + '\n');
+   
+     var versionChecker = Components.classes["@mozilla.org/xpcom/version-comparator;1"]
+                               .getService(Components.interfaces.nsIVersionComparator);
+     if ( versionChecker.compare( version, "3.0b4" ) >= 0 ) {
+        //dump('branche 3 et superieure' + '\n');
+        return false;
+     } else {
+        //dump('probablement la branche 2' + '\n');
+        return true;
+    }
+  },
+
 
   _createDocumentCB: function(arg) {
     arg.currentAttachment++;
@@ -184,12 +225,23 @@ var linshareSend = {
                               .classes["@mozilla.org/embedcomp/prompt-service;1"]
                               .getService(Components.interfaces.nsIPromptService);
       
-      promptService.alert(window, arg.strings.getString("sendErrorTitle"), arg.strings.getString(code) + " " + message);
+      fullMsg = arg.strings.getString(code) + " " + message;
+      promptService.alert(window, arg.strings.getString("sendErrorTitle"), fullMsg);
       
       if (cancel) {
           arg.cancel(arg);
           // don't propagate the event compose-send-message, ie: send the message
           event.preventDefault("compose-send-message");
       }
-  }
+  },
+
+  console: Components.classes["@mozilla.org/consoleservice;1"]
+                     .getService(Components.interfaces.nsIConsoleService),
+
+  logInfo: function (message) {
+    this.console.logStringMessage("LinShare: " + message);
+  },
+
+
+
 };
