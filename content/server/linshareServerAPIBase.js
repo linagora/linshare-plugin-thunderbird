@@ -42,25 +42,26 @@ LinshareServerAPIBase.prototype = {
 	Components.utils.reportError("LinShare: " + message);
     },
 
-
     newRequest: function (method, url, async, username, password) {
-        var request =  Components
-                            .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                            .createInstance(Components.interfaces.nsIXMLHttpRequest);
-        
-        request.open(method, this.removeSlashes(url), async, username, password);
-	request.logInfo = function ( message) {
-		var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
-                                 .getService(Components.interfaces.nsIConsoleService);
-		consoleService.logStringMessage("LinShare: " + message);
-	};
-	request.logError = function ( message) {
-		Components.utils.reportError("LinShare: " + message);
-	};
+       var request =  Components
+                             .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                             .createInstance(Components.interfaces.nsIXMLHttpRequest);
 
-        return request;
+       request.open(method, this.removeSlashes(url), async);
+       request.setRequestHeader('Authorization', 'Basic ' + window.btoa(username + ':' + password));
+
+       request.logInfo = function (message) {
+         var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
+           .getService(Components.interfaces.nsIConsoleService);
+         consoleService.logStringMessage("LinShare: " + message);
+       };
+       request.logError = function (message) {
+         Components.utils.reportError("LinShare: " + message);
+       };
+
+       return request;
     },
-    
+
     newFileUploadRequest: function (file, fileName, url, async, username, password) {
         var contentType = this.getFileMimeType(file, "application/octet-stream");
         var multiStream = Components
