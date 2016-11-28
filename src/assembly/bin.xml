@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<assembly>
+  <id>archive</id>
+  <formats>
+    <format>tar.bz2</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>target/</directory>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+          <include>*.xpi</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>
