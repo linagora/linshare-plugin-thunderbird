@@ -28,7 +28,7 @@ var linshare = {
     this.prefs = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefService)
                     .getBranch("extensions.linshare.");
-    this.prefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+    this.prefs.QueryInterface(Components.interfaces.nsIPrefBranch);
     if (this.prefs.prefHasUserValue("email")) {
       this._email = this.prefs.getCharPref("email", "");
     } else {

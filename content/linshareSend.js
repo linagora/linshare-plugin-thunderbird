@@ -29,7 +29,7 @@ var linshareSend = {
                     .classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefService)
                     .getBranch("extensions.linshare.")
-                    .QueryInterface(Components.interfaces.nsIPrefBranch2);
+                    .QueryInterface(Components.interfaces.nsIPrefBranch);
     this.scriptLoader = Components
                             .classes["@mozilla.org/moz/jssubscript-loader;1"]
                             .createInstance(Components.interfaces.mozIJSSubScriptLoader);
@@ -231,7 +231,9 @@ var linshareSend = {
       if (cancel) {
           arg.cancel(arg);
           // don't propagate the event compose-send-message, ie: send the message
-          event.preventDefault("compose-send-message");
+          window.addEventListener("compose-send-message", (event)=>{
+              event.preventDefault();
+          })
       }
   },
 

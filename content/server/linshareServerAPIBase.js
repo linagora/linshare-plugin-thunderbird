@@ -38,14 +38,36 @@ LinshareServerAPIBase.prototype = {
     	this.console.logStringMessage("LinShare: " + message);
     },
 
+    TBversionUnder60 : function () {
+      var version;
+      if ( "@mozilla.org/xre/app-info;1" in Components.classes )
+        version = Components.classes["@mozilla.org/xre/app-info;1"]
+                      .getService(Components.interfaces.nsIXULAppInfo).version;
+      else
+        version = Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch).getCharPref("app.version");
+    
+      var versionChecker = Components.classes["@mozilla.org/xpcom/version-comparator;1"]
+                             .getService(Components.interfaces.nsIVersionComparator);
+      if ( versionChecker.compare( version, "60.0.0" ) >= 0 ) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+
     logError: function (message) {
 	Components.utils.reportError("LinShare: " + message);
     },
 
     newRequest: function (method, url, async, username, password) {
-       var request =  Components
+        if (!this.TBversionUnder60()){
+            var request =  new XMLHttpRequest();
+        } else {
+            var request =  Components
                              .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                              .createInstance(Components.interfaces.nsIXMLHttpRequest);
+        }
 
        request.open(method, this.removeSlashes(url), async);
        request.setRequestHeader('Authorization', 'Basic ' + window.btoa(username + ':' + password));
@@ -62,7 +84,16 @@ LinshareServerAPIBase.prototype = {
        return request;
     },
 
-    newFileUploadRequest: function (file, fileName, url, async, username, password) {
+    newFileUploadRequest: function(file, fileName, url, async, username, password){
+        if (!this.TBversionUnder60()){
+            return this.newFileUploadRequestV2(file, fileName, url, async, username, password)
+        } else {
+            return this.newFileUploadRequestV1(file, fileName, url, async, username, password)
+        }
+
+    },
+
+    newFileUploadRequestV1: function (file, fileName, url, async, username, password) {
         var contentType = this.getFileMimeType(file, "application/octet-stream");
         var multiStream = Components
                             .classes["@mozilla.org/io/multiplex-input-stream;1"]
@@ -91,15 +122,40 @@ LinshareServerAPIBase.prototype = {
         
         return request;
     },
+
+    newFileUploadRequestV2: function (file, fileName, url, async, username, password) {
+        var request = this.newRequest("POST", url, async, username, password);
+        
+        //TODO: check file name encoding: using file.leafName is not sufficient
+        // Bug #139 Adding unescape(encodeURIComponent fixed the bug
+        // Only works with Linshare >= 0.8.4
+
+        request.setRequestHeader("Content-Type","multipart/form-data");
+        
+        // A small utility function allowing us to hide the complexity of the body object
+        request.sendFile = function() { 
+		
+			let self = this;
+			File.createFromNsIFile(file).then(aFile => {
+				let form = new FormData();
+                form.append("file",aFile);
+                form.append("filesize",aFile.size);                
+				self.send(form);
+			});
+		};
+        
+        return request;
+    },
+
     
     removeSlashes: function (url) {
 	//this.logInfo("url : " + url);
-	return url;
 	// why this code ? at this time ?
-        var slash = "/";
-        var regEx = new RegExp("(" + slash + "){2,}", "i");
+    var slash = "/";
+    var regEx = new RegExp("(" + slash + "){2,}", "i");
 	// removing double '/'
-        newUrl = url.replace(regEx, slash);
+    newUrl = url.replace(regEx, slash);
+	return newUrl;
     },
     
     openFile: function (url) {
