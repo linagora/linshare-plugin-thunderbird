@@ -206,7 +206,7 @@
   </profiles>
   <scm>
     <connection>scm:git:git://github.com/linagora/linshare-plugin-thunderbird.git</connection>
-    <developerConnection>scm:git:ssh://git@ci-gsafe.linagora.com:8000/linshare/linshare-plugin-thunderbird.git</developerConnection>
+    <developerConnection>scm:git:ssh://git@ci.linagora.com:7999/linagora/lgs/linshare/products/linshare-plugin-thunderbird.git</developerConnection>
     <tag>HEAD</tag>
     <url>http://github.com/linagora/linshare-plugin-thunderbird/tree/master/</url>
   </scm>
