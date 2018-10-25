@@ -4,7 +4,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>linshare@linagora</em:id>
     <em:name>LinShare</em:name>
-    <em:version>1.8.0</em:version>
+    <em:version>1.8.1-SNAPSHOT</em:version>
     <em:creator>Linagora</em:creator>
     <em:contributor>Raphael Ouazana</em:contributor>
     <em:description>Send attachments with LinShare</em:description>
