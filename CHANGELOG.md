@@ -1,3 +1,10 @@
+<a name="1.8.0"></a>
+# [1.8.0](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.7.1...1.8.0) (2018-10-31) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.8.0/)
+
+### Bug Fixes
+
+* Support of ThunderBird 60
+
 <a name="1.7.1"></a>
 # [1.7.1](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.7...v1.7.1) (2016-11-28) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.7.1/)
 
