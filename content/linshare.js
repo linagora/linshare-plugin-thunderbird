@@ -44,34 +44,6 @@ var linshare = {
     // preferences observer
     this.prefs.addObserver("", this, false);
 
-    // add a toolbar button if necessary
-    if (document.getElementById("linshare-toolbar-button") == null) {
-      var sendButton = document.getElementById("button-send");
-      var toolbar = document.getElementById("composeToolbar");
-      if (toolbar == null) {
-        toolbar = document.getElementById("composeToolbar2");
-      }
-      // get toolbar element that is just after sendButton
-      var child = toolbar.firstChild;
-      var sendButtonNext = null;
-      while (child) {
-        if (child.id == "button-send") {
-          if (child.nextSibling) {
-            sendButtonNext = document.getElementById(child.nextSibling.id);
-          }
-          break;
-        }
-        child = child.nextSibling;
-      }
-      if (sendButton != null && toolbar != null) {
-        if (sendButtonNext) {
-          toolbar.insertItem("linshare-toolbar-button", sendButtonNext, null, false);
-        } else {
-          toolbar.insertItem("linshare-toolbar-button", sendButton, null, false);
-        }
-        document.persist(toolbar.id, "currentset");
-      }
-    }
   },
 
   onUnLoad: function() {

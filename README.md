@@ -6,6 +6,11 @@ by writing a new mail. There is a new button in the compose window named
 the plugin will upload attachments and share them with the recipients of the
 current mail before sending the original mail without attachments.
 
+The 1.9.0 version work with :
+
+* LinShare : 1.x to 2.3.
+* ThunderBird : 68+
+
 The 1.8.0 version work with :
 
 * LinShare : 1.x to 2.2.

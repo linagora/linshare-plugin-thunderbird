@@ -19,11 +19,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <overlay id="linshare-compose-overlay"
+         xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
   <script src="linshareConfig.js"/>
   <script src="linshare.js"/>
   <script src="linshareSend.js"/>
   <script src="send-message-overlay.js"/>
+
   <stringbundleset id="stringbundleset">
     <stringbundle id="linshare-strings" src="chrome://linshare/locale/linshare.properties"/>
     <stringbundle id="linshare-option" src="chrome://linshare/content/config.properties" />
@@ -34,16 +37,24 @@
               accesskey="&linshareContext.accesskey;"
               oncommand="linshareConfig.onMenuItemCommand(event);"/>
   </menupopup>
+
   <popup id="threadPaneContext">
     <menuitem id="context-linshare" label="&linshareContext.label;"
               accesskey="&linshareContext.accesskey;"
               oncommand="linshareConfig.onMenuItemCommand(event)"/>
   </popup>
+ <toolbox id="compose-toolbox">
   <toolbarpalette id="MsgComposeToolbarPalette">
-  <toolbarbutton id="linshare-toolbar-button"
-    label="&linshareToolbar.label;"
-    tooltiptext="&linshareToolbar.tooltip;"
-    oncommand="linshare.onToolbarButtonCommand()"
-    class="toolbarbutton-1 chromeclass-toolbar-additional custombutton"/>
+    <toolbarbutton id="linshare-toolbar-button"
+      label="&linshareToolbar.label;"
+      tooltiptext="&linshareToolbar.tooltip;"
+      insertafter="button-send"
+      oncommand="linshare.onToolbarButtonCommand()"
+      class="toolbarbutton-1 chromeclass-toolbar-additional custombutton"/>
   </toolbarpalette>
+
+  <toolbar id="composeToolbar2"      
+           defaultset="button-send,linshare-toolbar-button,separator,button-address,spellingButton,button-security,button-save,spring,button-attach">
+  </toolbar>
+</toolbox>
 </overlay>

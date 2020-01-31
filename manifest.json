@@ -1,0 +1,26 @@
+{
+    "applications": {
+        "gecko": {
+            "id": "linshare@linagora",
+            "strict_min_version": "68.0"
+        }
+    },
+    "author": "Linagora",
+    "description": "Send attachments with LinShare",
+    "developer": {
+        "name": ""
+    },
+    "homepage_url": "http://www.linshare.org",
+    "icons": {
+        "32": "linshare.png"
+    },
+    "legacy": {
+        "type": "xul",
+        "options": {
+            "page": "chrome://linshare/content/options.xul"
+        }
+    },
+    "manifest_version": 2,
+    "name": "LinShare",
+    "version": "1.9.0-SNAPSHOT"
+}

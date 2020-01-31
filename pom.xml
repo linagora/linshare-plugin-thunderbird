@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.linagora.linshare</groupId>
   <artifactId>linshare-plugin-thunderbird</artifactId>
-  <version>1.8.1-SNAPSHOT</version>
+  <version>1.9.0-SNAPSHOT</version>
   <name>linshare-plugin-thunderbird</name>
   <url>http://linshare.org</url>
   <build>
@@ -132,17 +132,17 @@
             <version>1.5.3</version>
             <executions>
               <execution>
-                <id>install.rdf</id>
+                <id>manifest.json</id>
                 <phase>validate</phase>
                 <goals>
                   <goal>replace</goal>
                 </goals>
                 <configuration>
-                  <file>install.rdf</file>
+                  <file>manifest.json</file>
                   <replacements>
                     <replacement>
-                        <token>&lt;em:version&gt;.*&lt;/em:version&gt;</token>
-                        <value>&lt;em:version&gt;${project.version}&lt;/em:version&gt;</value>
+                        <token>"version":.*</token>
+                        <value>"version": "${project.version}"</value>
                     </replacement>
                   </replacements>
                 </configuration>
@@ -155,15 +155,15 @@
             <version>1.9.4</version>
             <executions>
               <execution>
-                <id>install.rdf</id>
+                <id>manifest.json</id>
                 <phase>validate</phase>
                 <goals>
                   <goal>add</goal>
                   <goal>checkin</goal>
                 </goals>
                 <configuration>
-                  <includes>install.rdf</includes>
-                  <message>[maven-release-plugin] prepare version for install.rdf</message>
+                  <includes>manifest.json</includes>
+                  <message>[maven-release-plugin] prepare version for manifest.json</message>
                 </configuration>
               </execution>
             </executions>
@@ -182,17 +182,17 @@
             <version>1.5.3</version>
             <executions>
               <execution>
-                <id>install.rdf</id>
+                <id>manifest.json</id>
                 <phase>validate</phase>
                 <goals>
                   <goal>replace</goal>
                 </goals>
                 <configuration>
-                  <file>install.rdf</file>
+                  <file>manifest.json</file>
                   <replacements>
                     <replacement>
-                        <token>&lt;em:version&gt;.*&lt;/em:version&gt;</token>
-                        <value>&lt;em:version&gt;${project.version}&lt;/em:version&gt;</value>
+                        <token>"version":.*</token>
+                        <value>"version": "${project.version}"</value>
                     </replacement>
                   </replacements>
                 </configuration>

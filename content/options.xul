@@ -22,15 +22,13 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<prefwindow id="linsharePreferences" windowtype="linsharePreferences" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="&prefwindow.title;">
-  <prefpane id="pane1" label="&pane1.title;">
-    <preferences>
-      <preference id="emailpref" name="extensions.linshare.email" type="string"/>
-      <preference id="urlpref" name="extensions.linshare.url" type="string"/>
-      <preference id="messagepref" name="extensions.linshare.message" type="wstring"/>
-    </preferences>
+
+<dialog id="linsharePreferences" windowtype="linsharePreferences" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="&prefwindow.title;">
+  <vbox id="pane1" label="&pane1.title;">
     <groupbox height="80">
-      <caption label="&emailpref.description;" />
+      <hbox class="groupbox-title">
+        <label class="header">&emailpref.description;</label>
+      </hbox>
       <spacer flex="1" />
       <hbox align="center">
         <label accesskey="&emailpref.accesskey;" control="textemailpref" value="&emailpref.label;" />
@@ -39,8 +37,11 @@
       </hbox>
       <spacer flex="1" />
     </groupbox>
+
     <groupbox height="80">
-      <caption label="&urlpref.description;" />
+      <hbox class="groupbox-title">
+        <label class="header">&urlpref.description;</label>
+      </hbox>
       <spacer flex="1" />
       <hbox align="center">
         <label accesskey="&urlpref.accesskey;" control="texturlpref" value="&urlpref.label;" />
@@ -49,8 +50,11 @@
       </hbox>
       <spacer flex="1" />
     </groupbox>
+
     <groupbox height="150">
-      <caption label="&messagepref.description;" />
+      <hbox class="groupbox-title">
+        <label class="header">&messagepref.description;</label>
+      </hbox>
       <spacer flex="1" />
       <description width="1">&messagepref.comment;</description>
       <spacer flex="1" />
@@ -61,5 +65,7 @@
       </hbox>
       <spacer flex="1" />
     </groupbox>
-  </prefpane>
-</prefwindow>
+  </vbox>
+   <script src="chrome://global/content/preferencesBindings.js" type="application/javascript"/>
+  <script src="chrome://linshare/content/preferences.js" type="application/javascript"/>  
+</dialog>
