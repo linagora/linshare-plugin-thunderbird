@@ -160,7 +160,7 @@ var linshare = {
         Components.utils.reportError(ex);
         return false;
       }
-      GenericSendMessage(document.gIsOffLine ? nsIMsgCompDeliverMode.Later : nsIMsgCompDeliverMode.Now);
+      GenericSendMessage(document.gIsOffLine ? Components.interfaces.nsIMsgCompDeliverMode.Later : Components.interfaces.nsIMsgCompDeliverMode.Now);
     };
 
     var onCancelSend = function(arg) {
@@ -185,7 +185,7 @@ var linshare = {
         onCancelSend(this);
       }
     } else {
-      GenericSendMessage(document.gIsOffLine ? nsIMsgCompDeliverMode.Later : nsIMsgCompDeliverMode.Now);
+      GenericSendMessage(document.gIsOffLine ? Components.interfaces.nsIMsgCompDeliverMode.Later :Components.interfaces.nsIMsgCompDeliverMode.Now);
     }
   },
 
