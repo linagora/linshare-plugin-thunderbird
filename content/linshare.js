@@ -224,7 +224,7 @@ var linshare = {
       } else {  // TB 3
         loginManager = Components.classes["@mozilla.org/login-manager;1"]
                                  .getService(Components.interfaces.nsILoginManager);
-        var logins = loginManager.findLogins({}, url, url, null);
+        var logins = loginManager.findLogins(url, null, url);
         for (var i = 0; i < logins.length; i++) {
           if (logins[i].username == email) {
            password = logins[i].password;
@@ -257,7 +257,7 @@ var linshare = {
           var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Components.interfaces.nsILoginInfo,
                                              "init");
-          var loginInfo = new nsLoginInfo(url, url, null, email, password, "", "");
+          var loginInfo = new nsLoginInfo(url, null, url, email, password, "", "");
           loginManager.addLogin(loginInfo);
         }
       } else {
