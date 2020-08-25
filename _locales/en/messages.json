@@ -1,0 +1,11 @@
+{
+    "extensionDescription": {
+        "message": "Send attachments with LinShare"
+    },
+    "extensionName": {
+        "message": "LinShare"
+    },
+    "shareButton":{
+        "message": "Share&Send"
+    }
+}

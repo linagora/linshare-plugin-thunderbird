@@ -1,26 +1,55 @@
 {
-    "applications": {
-        "gecko": {
-            "id": "linshare@linagora",
-            "strict_min_version": "68.0"
-        }
-    },
-    "author": "Linagora",
-    "description": "Send attachments with LinShare",
-    "developer": {
-        "name": ""
-    },
-    "homepage_url": "http://www.linshare.org",
-    "icons": {
-        "32": "linshare.png"
-    },
-    "legacy": {
-        "type": "xul",
-        "options": {
-            "page": "chrome://linshare/content/options.xul"
-        }
-    },
-    "manifest_version": 2,
-    "name": "LinShare",
-    "version": "1.9.2-SNAPSHOT"
+  "applications": {
+    "gecko": {
+      "id": "linshare@linagora",
+      "strict_min_version": "68.0"
+    }
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "experiment_apis": {
+    "linshare": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "paths": [
+          [
+            "linshare"
+          ]
+        ],
+        "script": "linshare.js"
+      }
+    }
+  },
+  "default_locale": "fr",
+  "compose_action": {
+    "default_title": "__MSG_shareButton__",
+    "default_icon": "assets/linshare.png"
+  },
+  "browser_action": {
+    "default_title": "__MSG_extensionName__",
+    "default_icon": "assets/linshare.png"
+  },
+  "author": "Linagora",
+  "description": "__MSG_extensionDescription__",
+  "developer": {
+    "name": ""
+  },
+  "homepage_url": "http://www.linshare.org",
+  "icons": {
+    "32": "assets/linshare.png"
+  },
+  "manifest_version": 2,
+  "permissions": [
+    "storage",
+    "compose",
+    "tabs"
+  ],
+  "name": "__MSG_extensionName__",
+  "version": "2.0.0-SNAPSHOT"
 }

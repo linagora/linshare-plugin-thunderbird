@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../../../skin/reset.css">
+  <link rel="stylesheet" href="options.css">
+  <link rel="stylesheet" href="../../../src/css/bootstrap.min.css">
+  <script src="../../../src/js/alertify.min.js"></script>
+  <link rel="stylesheet" href="../../../src/css/alertify.min.css">
+  <script src="options.js" defer></script>
+  <script src="../../../src/js/bootstrap.min.js"></script>
+  <title>Linshare Settings</title>
+</head>
+
+<body style="background-color: #05b1ff; height: 100%;">
+  <!-- libre logo-->
+  <div class="d-flex flex-row position-fixed align-self-center">
+    <img src="../../../assets/libre.png" alt="logo linshare" width="14px" height="14px" class=" m-1">
+    <p class="text-white font-weight-bold font-italic" style="font-size: 14px; font-family: Lato,sans-serif;">Libre &
+      Free</p>
+  </div>
+  <!-- linshare picture -->
+  <div class="d-flex flex-column">
+    <img src="../../../assets/ls-logo-big.png" alt="linshare logo" class="mt-3 mx-auto d-block">
+    <p class="text-white mx-auto d-block font-weight-bold" style="font-family: roboto,sans-serif;">Secure file sharing
+      app in open source</p>
+  </div>
+  <!-- connexion settings -->
+  <div class="card shadow-lg mt-3 mx-auto" style="width: 480px;">
+
+    <h5 class="card-header border-light text-center py-4 font-weight-bold text-header">
+      Connection settings
+    </h5>
+
+    <div class="card-body px-lg-5 pt-0">
+
+      <form class="mt-3 ml-2">
+
+        <div class="form-group row text-nowrap">
+          <label for="serverUrl" class="text-muted form-label">Server Url</label>
+          <input type="text" name="url" id="serverUrl" class="form-control bg-light"
+            placeholder="Enter your linshare url">
+        </div>
+
+        <div class="form-group row text-nowrap">
+          <label for="email" class="text-muted form-label">E-mail</label>
+          <input type="email" name="mail" id="userEmail" class="form-control" placeholder="Enter your linshare email">
+        </div>
+
+        <div class=" form-group row text-nowrap">
+          <label for="password" class="text-muted form-label">Password</label>
+          <input type="password" name="password" id="userPassword" class="form-control"
+            placeholder="Enter your linshare password">
+        </div>
+
+        <div class="text-nowrap mt-1 ml-1">
+          <input type="checkbox" class="form-check-input" id="mustSave" name="mustSave">
+          <label class="text-checkbox form-label" for="mustSave">Keep me signed in</label>
+        </div>
+
+        <button id="saveSettings" class="btn btn-block my-4"
+          style="background-color: #05b1ff; text-transform: uppercase;">
+          <strong class="text-white">save</strong>
+        </button>
+      </form>
+    </div>
+
+  </div>
+  <!-- Preferences -->
+  <div id="v1" style="display: none">
+    <div class="card shadow-lg mt-5 mx-auto" style="width: 480px;">
+      <h5 class="card-header border-light text-center py-4 font-weight-bold text-header">
+        Preferences
+      </h5>
+
+      <div class="card-body px-lg-5 pt-0" id="card-body">
+
+        <form class="mt-3" style="color: #757575;">
+
+          <div class="form-group text-nowrap">
+            <label for="message" class="text-dark text-muted col-form-label">Message</label>
+            <div class="md-form mt-0">
+              <textarea class="form-control md-textarea message-textarea" id="message"
+                placeholder="your Preference"></textarea>
+            </div>
+          </div>
+
+          <div id="v2" style="display: none">
+            <!-- checkbox to show if version < 2 -->
+            <div class="form-group row text-nowrap">
+              <label class="text-dark col-sm-10 col-form-label" for="accusedOfSharing">Recevoir un accusé de
+                partage</label>
+              <div class="col-sm-2">
+                <div class="md-form mt-2">
+                  <input type="checkbox" class="form-check-input" id="accusedOfSharing" name="accusedOfSharing">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group row text-nowrap">
+              <label class="text-dark col-sm-10 col-form-label " for="noDownload">Recevoir un accusé de
+                non-téléchargement</label>
+              <div class="col-sm-2">
+                <div class="md-form mt-2">
+                  <input type="checkbox" class="form-check-input" id="noDownload" name="noDownload">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group row text-nowrap">
+              <label class="text-dark col-sm-10 col-form-label" for="secureShare">Sécuriser le partage</label>
+              <div class="col-sm-2">
+                <div class="md-form mt-2">
+                  <input type="checkbox" class="form-check-input" id="secureShare" name="secureShare">
+                </div>
+              </div>
+            </div>
+          </div>
+          <button id="savePreferences" class="btn btn-block my-4"
+            style="background-color: #05b1ff;text-transform: uppercase;">
+            <strong class="text-white">save</strong>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p class="text-white text-center position-sticky mt-2"
+      style="font-family: roboto,sans-serif; font-size: 11px; width: 100%; bottom: 0px;">You
+      are using the Open Source and free version of LinShare™, powered by Linagora © 2009–2019. Contribute to LinShare
+      R&D
+      by subscribing to an Enterprise offer.</p>
+  </footer>
+  <button id="test" class="btn btn-block my-4" style="background-color: #05b1ff;text-transform: uppercase;">
+</body>
+
+
+</html>
