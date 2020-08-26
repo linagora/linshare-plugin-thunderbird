@@ -6,16 +6,17 @@
 
 # This script assumes the following directory structure:
 # ./
-#   chrome.manifest (optional - for newer extensions)
-#   install.rdf
+#   manifest.json 
+#   schema.json
+#   linshare.js
+#   background.js
 #   (other files listed in $ROOT_FILES)
 #
 #   content/    |
-#   locale/     |} these can be named arbitrary and listed in $CHROME_PROVIDERS
+#   _locales/   |
 #   skin/       |
-#
-#   defaults/   |
-#   components/ |} these must be listed in $ROOT_DIRS in order to be packaged
+#   assets/     |} these must be listed in $ROOT_DIRS in order to be packaged
+#   modules/    |
 #   ...         |
 #
 # It uses a temporary directory ./build when building; don't use that!
@@ -62,18 +63,7 @@ rm -rf $TMP_DIR
 
 $BEFORE_BUILD
 
-mkdir --parents --verbose $TMP_DIR/chrome
-
-# generate the JAR file, excluding CVS and temporary files
-JAR_FILE=$TMP_DIR/chrome/$APP_NAME.jar
-echo "Generating $JAR_FILE..."
-for CHROME_SUBDIR in $CHROME_PROVIDERS; do
-  find $CHROME_SUBDIR -path '*CVS*' -prune -o -type f -print | grep -v \~ | grep -v '\.svn' >> files
-done
-
-zip -0 -r $JAR_FILE `cat files`
-# The following statement should be used instead if you don't wish to use the JAR file
-#cp --verbose --parents `cat files` $TMP_DIR/chrome
+mkdir --parents --verbose $TMP_DIR
 
 # prepare components and defaults
 echo "Copying various files to $TMP_DIR folder..."
@@ -85,7 +75,7 @@ for DIR in $ROOT_DIRS; do
 done
 
 # Copy other files to the root of future XPI.
-for ROOT_FILE in $ROOT_FILES chrome.manifest manifest.json linshare.png; do
+for ROOT_FILE in $ROOT_FILES; do
   cp --verbose $ROOT_FILE $TMP_DIR
   if [ -f $ROOT_FILE ]; then
     echo $ROOT_FILE >> files
@@ -93,19 +83,6 @@ for ROOT_FILE in $ROOT_FILES chrome.manifest manifest.json linshare.png; do
 done
 
 cd $TMP_DIR
-
-if [ -f "chrome.manifest" ]; then
-  echo "Preprocessing chrome.manifest..."
-  # You think this is scary?
-  #s/^(content\s+\S*\s+)(\S*\/)$/\1jar:chrome\/$APP_NAME\.jar!\/\2/
-  #s/^(skin|locale)(\s+\S*\s+\S*\s+)(.*\/)$/\1\2jar:chrome\/$APP_NAME\.jar!\/\3/
-  #
-  # Then try this! (Same, but with characters escaped for bash :)
-  sed -i -r s/^\(content\\s+\\S*\\s+\)\(\\S*\\/\)$/\\1jar:chrome\\/$APP_NAME\\.jar!\\/\\2/ chrome.manifest
-  sed -i -r s/^\(skin\|locale\)\(\\s+\\S*\\s+\\S*\\s+\)\(.*\\/\)$/\\1\\2jar:chrome\\/$APP_NAME\\.jar!\\/\\3/ chrome.manifest
-
-  # (it simply adds jar:chrome/whatever.jar!/ at appropriate positions of chrome.manifest)
-fi
 
 # generate the XPI file
 echo "Generating $APP_NAME.xpi..."
@@ -115,10 +92,7 @@ zip -r ../target/$APP_NAME.xpi *
 cd "$ROOT_DIR"
 
 echo "Cleanup..."
-if [ $CLEAN_UP = 0 ]; then
-  # save the jar file
-  mv $TMP_DIR/chrome/$APP_NAME.jar .
-else
+if [ $CLEAN_UP -ne 0 ]; then
   rm ./files
 fi
 
