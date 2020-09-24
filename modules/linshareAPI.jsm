@@ -126,7 +126,7 @@ var LinshareAPI = {
 
     return { 'ok': false }
   },
-  async uploadFile(USER_INFOS, file) {
+  async uploadFile(USER_INFOS, file, uploadProgress) {
     const SERVER_URL = USER_INFOS.SERVER_URL();
     const USER_EMAIL = USER_INFOS.USER_EMAIL();
     const API_VERSION = USER_INFOS.API_VERSION();
@@ -153,14 +153,16 @@ var LinshareAPI = {
     if (type == 'application/json') {
       headers.append("Accept", "application/json")
     }
+    let progressElem = uploadProgress()
     let response = await this._fetch(url, {
       method: 'POST',
       headers: this.makeRequestHeaders(headers, SERVER_URL),
       body: formData
-    })
+    }, progressElem)
 
     let uuid;
     if (response.status === 200) {
+      progressElem.querySelector('.progress-bar').classList.add("bg-success")
       uuid = this.handleResponse(response)
     } else if (response.status === 401) {
       let check = await this.checkCredentials(SERVER_URL, USER_EMAIL, API_VERSION, pwd)
@@ -171,6 +173,7 @@ var LinshareAPI = {
       }
       return
     } else {
+      progressElem.querySelector('.progress-bar').classList.add("bg-danger")
       uuid = await this.handleError(response)
     }
     return uuid
@@ -301,15 +304,24 @@ var LinshareAPI = {
   async handleError(err) {
     switch (err.status) {
       case 420:
-        throw new Error(`sendErrorQuota ${response}`)
+        Services.prompt.alert(this.CURRENT_COMPOSER(), "Error", "The account quota has been reached.")
+        throw new Error("The account quota has been reached.")
       case 451:
-        throw new Error(`sendErrorVirus ${response}`)
+        Services.prompt.alert(this.CURRENT_COMPOSER(), "Error", "File contains virus")
       default:
-        throw new Error("sendError");
+        if (JSON.parse(err.body).message) {
+          Services.prompt.alert(this.CURRENT_COMPOSER(), "Error", JSON.parse(err.body).message)
+          if (JSON.parse(err.body).errCode = "46011") {
+            throw new Error(JSON.parse(err.body).message)
+          }
+        } else {
+          Services.prompt.alert(this.CURRENT_COMPOSER(), "Error", "Uploading failed")
+        }
+
 
     }
   },
-  _fetch(url, opts = {}, onProgress = null) {
+  _fetch(url, opts = {}, progressElem = null) {
     return new Promise((res, rej) => {
       var xhr = new XMLHttpRequest();
       xhr.open(opts.method || 'get', url);
@@ -323,9 +335,25 @@ var LinshareAPI = {
         "headers": this.makeResponseHeaders(e.target.getAllResponseHeaders()),
         "status": e.target.status
       });
+      if (progressElem) {
+        this.CURRENT_COMPOSER().onclose = function (e) {
+          e.stopPropagation()
+          let confirm = Services.prompt.confirm(null, 'Abort uploading', 'Uploading to linshare is in process, do you want to stop it')
+          if (confirm) {
+            xhr.abort()
+          } else {
+            e.preventDefault()
+          }
+        }
+      }
       xhr.onerror = rej;
-      if (xhr.upload && onProgress)
-        xhr.upload.onprogress = onProgress;
+      if (xhr.upload && progressElem instanceof Element)
+        xhr.upload.onprogress = function ({ loaded: l, total: t }) {
+          let percent = `${Math.round(l / t * 100)}%`
+          let progressbar = progressElem.querySelector('[aria-valuenow]');
+          progressbar.style.width = percent
+          progressbar.textContent = percent
+        };
       if (opts.body) {
         let body = opts.body
         xhr.send(body);

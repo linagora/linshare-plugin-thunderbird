@@ -15,16 +15,30 @@ this.linshare = class extends ExtensionCommon.ExtensionAPI {
     context.callOnClose(this);
 
     return {
-      linshare: {     
+      linshare: {
         async sendAndShare(files, recipients) {
+
+          let uploadProgressList = LinshareUtils.createProgressList();
+
           let sendFilesUuid = [];
           for (let i = 0; i < files.length; i++) {
-            let uuid = await LinshareAPI.uploadFile(USER_INFOS, files[i]);
-            if (uuid) sendFilesUuid.push(uuid);
+            let uploadProgress = function () { return LinshareUtils.createProgress(files[i]) }
+            try {
+              let uuid = await LinshareAPI.uploadFile(USER_INFOS, files[i], uploadProgress);
+              if (typeof uuid == "string") {
+                sendFilesUuid.push(uuid);
+              } else if (uuid[0]?.textContent) {
+                sendFilesUuid.push(uuid[0].textContent);
+              }
+            } catch (e) {
+              break
+            }
+
           }
           if (sendFilesUuid.length > 0) {
             let isSend = await LinshareAPI.shareMulipleDocuments(USER_INFOS, sendFilesUuid, recipients)
             if (isSend.ok) {
+              LinshareUtils.getCurrentComposeWindow().RemoveAllAttachments()
               return { ok: true }
             }
             return { ok: false, message: `File uploaded but sharing failed ${isSend.message ? isSend.message : ""}` }
