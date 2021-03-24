@@ -32,15 +32,24 @@ async function notify(tab) {
   let parser = new DOMParser();
   let message = parser.parseFromString(composeDetails.body, "text/html")
   let hasMessage = false
+  if(composeDetails.subject.trim().length == 0){
+    browser.compose.setComposeDetails(tab.id, { 'subject': "Shared documents with Linshare" })
+  }
   for (let elem of message.body.children) {
-    if (elem.className != 'moz-signature' && elem.innerText.trim(" ").length > 1) {
+    if (elem.classList.contains('linshare-default-message')) {
       hasMessage = true
     }
   }
   if (!hasMessage) {
-    let defaultMessaage = document.createElement('p');
-    defaultMessaage.innerText = userPrefs.message;
-    message.body.prepend(defaultMessaage)
+    let defaultMessaage = document.createElement('div');
+    let separator = document.createElement('p')
+    separator.innerHTML = '- - - - -'
+    let defaultText = document.createElement('p')
+    defaultText.innerText = userPrefs.MESSAGE;
+    defaultMessaage.appendChild(separator);
+    defaultMessaage.appendChild(defaultText);
+    defaultMessaage.classList.add("linshare-default-message")
+    message.body.append(defaultMessaage)
     browser.compose.setComposeDetails(tab.id, { 'body': message.body.innerHTML })
   }
   browser.linshare.sendMail();

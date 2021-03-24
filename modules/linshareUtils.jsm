@@ -117,7 +117,7 @@ var LinshareUtils = {
   },
   isProfilPrefs(API_VERSION) {
     let message = Preferences.get("linshare.MESSAGE");
-    let isSaved = message ? { 'MESSAGE': message } : { 'message': 'Un deuxième courriel vous sera adressé ultérieurement pour télécharger vos fichiers depuis l\'application de partage LinShare.' };
+    let isSaved = message ? { 'MESSAGE': message } : { 'MESSAGE': 'Un deuxième courriel vous sera adressé ultérieurement pour télécharger vos fichiers depuis l\'application de partage LinShare.' };
 
     if (API_VERSION >= 4) {
       return this.isProfilsPrefsV4(isSaved);

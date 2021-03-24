@@ -67,7 +67,7 @@ function setProfilPrefs(userPrefs) {
   let accusedOfSharing = document.getElementById('accusedOfSharing');
   let noDownload = document.getElementById('noDownload');
 
-  messageElem.value = userPrefs.message;
+  messageElem.value = userPrefs.MESSAGE;
   accusedOfSharingElem.checked = userPrefs.accusedOfSharing;
   noDownloadElem.checked = userPrefs.noDownload;
   secureShareElem.checked = userPrefs.secureShare;

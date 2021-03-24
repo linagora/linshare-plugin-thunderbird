@@ -62,6 +62,10 @@ this.linshare = class extends ExtensionCommon.ExtensionAPI {
           Preferences.set("linshare.SERVER_URL", SERVEUR_URL)
           Preferences.set("linshare.USER_EMAIL", USER_EMAIL)
           Preferences.set("linshare.MUST_SAVE", MUST_SAVE)
+
+          Preferences.set("mail.compose.big_attachments.insert_notification", false)
+          Preferences.set("mail.compose.big_attachments.notify", false)
+
           let check = await LinshareAPI.checkCredentials(SERVEUR_URL, USER_EMAIL, USER_INFOS.API_VERSION(), password)
 
           if (check.ok && MUST_SAVE) {
