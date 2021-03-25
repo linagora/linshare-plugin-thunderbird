@@ -38,6 +38,13 @@ var LinshareAPI = {
       let check = await this.checkCredentials(SERVER_URL, USER_EMAIL, API_VERSION, args.pass);
       if (args.ok && check.ok) {
         this.CURRENT_COMPOSER().credentials = { "hasPass": true, "pass": args.pass }
+        if (args.checked) {
+          var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+            Components.interfaces.nsILoginInfo,
+            "init");
+          var loginInfo = new nsLoginInfo(SERVER_URL, null, SERVER_URL, USER_EMAIL, args.pass, "", "");
+          Services.logins.addLogin(loginInfo);
+        }
         return args.pass;
       } else if (args.ok && !check.ok) {
         if (check.MESSAGE) Services.prompt.alert(win, 'Credentials', check.MESSAGE)
@@ -118,8 +125,14 @@ var LinshareAPI = {
       Preferences.set("linshare.API_VERSION", "v4");
       return { 'MESSAGE': response.headers.get("x-linshare-auth-error-msg"), 'ok': false };
     } else if (response.status == 404) {
-      Preferences.set("linshare.API_VERSION", "v1");
-      return { 'ok': false }
+      let nextVersion = API_VERSION
+      if (API_VERSION === 'v4') {
+        nextVersion = 'v1'
+      } else {
+        nextVersion = API_VERSION == 'v1' ? 'v2' : 'v4'
+      }
+      Preferences.set("linshare.API_VERSION", nextVersion);
+      return this.checkCredentials(SERVER_URL, USER_EMAIL, nextVersion, password, code)
     } else if (response.status == 401 && response.headers.has('cookie')) {
       Services.cookie.removeCookiesFromExactHost(SERVER_URL, {})
     }
@@ -178,12 +191,12 @@ var LinshareAPI = {
     }
     return uuid
   },
-  async shareMulipleDocuments(USER_INFOS, attachementsUuids, recipients) {
+  async shareMulipleDocuments(USER_INFOS, attachementsUuids, recipients, pathv2 = null) {
     const SERVER_URL = USER_INFOS.SERVER_URL();
     const USER_EMAIL = USER_INFOS.USER_EMAIL();
-    const API_VERSION = USER_INFOS.API_VERSION();
+    const API_VERSION = USER_INFOS.API_VERSION()
 
-    let path = `${SERVER_URL}${ROUTES.multipleShareDocumentsUrl[API_VERSION].url}`
+    let path = pathv2 ? `${SERVER_URL}${pathv2}` : `${SERVER_URL}${ROUTES.multipleShareDocumentsUrl[API_VERSION].url}`
     let url = new URL(path)
     let type = `${ROUTES.multipleShareDocumentsUrl[API_VERSION].ctype}`
     let pwd = await this.getUserPassword(SERVER_URL, USER_EMAIL, API_VERSION);
@@ -192,8 +205,8 @@ var LinshareAPI = {
     }
     let authorization = btoa(`${USER_EMAIL}:${pwd}`)
     let requests;
-
-    if (API_VERSION < 2) {
+    let version = API_VERSION.replace('v', '');
+    if (version < 2) {
       requests = this.createRequestV1(SERVER_URL, url, attachementsUuids,
         recipients, authorization);
     } else {
@@ -202,7 +215,7 @@ var LinshareAPI = {
     }
     for (let i = 0; i < requests.length; i++) {
       let response = await this._fetch(requests[i].url, requests[i].init, this.progress);
-      if (response.status != 200) {
+      if (response.status != 200 && response.status != 204) {
         let message = ""
         if (response.type == 'application/json') {
           let body = JSON.parse(response.body)
@@ -325,6 +338,7 @@ var LinshareAPI = {
     return new Promise((res, rej) => {
       var xhr = new XMLHttpRequest();
       xhr.open(opts.method || 'get', url);
+      xhr.withCredentials = true;
       for (var pair of opts.headers.entries() || {}) {
         if (pair[0] == 'cookie') pair[0] = 'Cookie'
         xhr.setRequestHeader(pair[0], pair[1]);
@@ -333,7 +347,7 @@ var LinshareAPI = {
         "type": e.target.getResponseHeader("Content-Type"),
         "body": e.target.response,
         "headers": this.makeResponseHeaders(e.target.getAllResponseHeaders()),
-        "status": e.target.status
+        "status": e.target.status,
       });
       if (progressElem) {
         this.CURRENT_COMPOSER().onclose = function (e) {
@@ -433,7 +447,7 @@ var LinshareAPI = {
     let patern = new RegExp('^[0-9]{6}')
     let dialog;
     while (!(patern.test(code.value))) {
-      dialog = Services.prompt.prompt(null, "TOTP code",
+      dialog = Services.prompt.prompt(this.CURRENT_COMPOSER(), "TOTP code",
         "Saisissez le code généré par l'application FreeOTP", code, null, {
         value: false,
       });

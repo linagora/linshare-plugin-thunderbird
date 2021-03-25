@@ -4,7 +4,7 @@ const ROUTES = {
   "uploadFileUrl": {
     "v1": {
       "ctype": "application/xml",
-      "url": "/documentrestservice/uploadfile"
+      "url": "/webservice/rest/document/upload"
     },
     "v2": {
       "ctype": "application/json",
@@ -18,7 +18,7 @@ const ROUTES = {
   "multipleShareDocumentsUrl": {
     "v1": {
       "ctype": "application/xml",
-      "url": "/sharerestservice/multiplesharedocuments"
+      "url": "/webservice/rest/share/multiplesharedocuments"
     },
     "v2": {
       "ctype": "application/json",
@@ -32,7 +32,7 @@ const ROUTES = {
   "authentication": {
     "v1": {
       "ctype": "application/xml",
-      "url": "/servicerestuserauthentication/authorized"
+      "url": "/webservice/rest/plugin/information"
     },
     "v2": {
       "ctype": "application/json",
