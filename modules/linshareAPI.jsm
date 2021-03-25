@@ -75,9 +75,9 @@ var LinshareAPI = {
       return await this.getPassword(SERVER_URL, USER_EMAIL, API_VERSION);
     }
   },
-  async checkCredentials(SERVER_URL, USER_EMAIL, API_VERSION, password, code) {
-
-    let url = `${SERVER_URL}${ROUTES.authentication[API_VERSION].url}`
+  async checkCredentials(SERVER_URL, USER_EMAIL, API_VERSION, password, code, versionTested = []) {
+    let baseUrl = Preferences.get('linshare.BASE_URL', '/linshare')
+    let url = `${SERVER_URL}${baseUrl}${ROUTES.authentication[API_VERSION].url}`
     let authorization = btoa(`${USER_EMAIL}:${password}`)
     let headers = new Headers({
       "Authorization": `Basic ${authorization}`,
@@ -126,13 +126,15 @@ var LinshareAPI = {
       return { 'MESSAGE': response.headers.get("x-linshare-auth-error-msg"), 'ok': false };
     } else if (response.status == 404) {
       let nextVersion = API_VERSION
+      if (versionTested.includes(nextVersion)) return { 'ok': false }
       if (API_VERSION === 'v4') {
         nextVersion = 'v1'
       } else {
         nextVersion = API_VERSION == 'v1' ? 'v2' : 'v4'
       }
       Preferences.set("linshare.API_VERSION", nextVersion);
-      return this.checkCredentials(SERVER_URL, USER_EMAIL, nextVersion, password, code)
+      versionTested.push(nextVersion)
+      return this.checkCredentials(SERVER_URL, USER_EMAIL, nextVersion, password, code, versionTested)
     } else if (response.status == 401 && response.headers.has('cookie')) {
       Services.cookie.removeCookiesFromExactHost(SERVER_URL, {})
     }
@@ -143,8 +145,8 @@ var LinshareAPI = {
     const SERVER_URL = USER_INFOS.SERVER_URL();
     const USER_EMAIL = USER_INFOS.USER_EMAIL();
     const API_VERSION = USER_INFOS.API_VERSION();
-
-    let url = `${SERVER_URL}${ROUTES.uploadFileUrl[API_VERSION].url}`
+    let baseUrl = Preferences.get('linshare.BASE_URL', '/linshare')
+    let url = `${SERVER_URL}${baseUrl}${ROUTES.uploadFileUrl[API_VERSION].url}`
     let type = `${ROUTES.uploadFileUrl[API_VERSION].ctype}`
     let pwd = await this.getUserPassword(SERVER_URL, USER_EMAIL, API_VERSION);
     if (!pwd) {
@@ -195,8 +197,8 @@ var LinshareAPI = {
     const SERVER_URL = USER_INFOS.SERVER_URL();
     const USER_EMAIL = USER_INFOS.USER_EMAIL();
     const API_VERSION = USER_INFOS.API_VERSION()
-
-    let path = pathv2 ? `${SERVER_URL}${pathv2}` : `${SERVER_URL}${ROUTES.multipleShareDocumentsUrl[API_VERSION].url}`
+    let baseUrl = Preferences.get('linshare.BASE_URL', '/linshare')
+    let path = pathv2 ? `${SERVER_URL}${pathv2}` : `${SERVER_URL}${baseUrl}${ROUTES.multipleShareDocumentsUrl[API_VERSION].url}`
     let url = new URL(path)
     let type = `${ROUTES.multipleShareDocumentsUrl[API_VERSION].ctype}`
     let pwd = await this.getUserPassword(SERVER_URL, USER_EMAIL, API_VERSION);
@@ -426,7 +428,8 @@ var LinshareAPI = {
     if (!password) {
       return
     }
-    let url = `${SERVER_URL}${ROUTES.getFunctionalities[API_VERSION].url}`
+    let baseUrl = Preferences.get('linshare.BASE_URL', '/linshare')
+    let url = `${SERVER_URL}${baseUrl}${ROUTES.getFunctionalities[API_VERSION].url}`
     let authorization = btoa(`${USER_EMAIL}:${password}`)
     let response = await fetch(url, {
       headers: {

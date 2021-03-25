@@ -58,8 +58,9 @@ this.linshare = class extends ExtensionCommon.ExtensionAPI {
         async getUserPrefs() {
           return await LinshareUtils.isProfilPrefs(USER_INFOS.API_VERSION())
         },
-        async saveUserAccount(SERVEUR_URL, USER_EMAIL, password, MUST_SAVE) {
-          Preferences.set("linshare.SERVER_URL", SERVEUR_URL)
+        async saveUserAccount(SERVEUR_URL, BASE_URL, USER_EMAIL, password, MUST_SAVE) {
+          Preferences.set("linshare.SERVER_URL", SERVEUR_URL.replace(/\/$/, ''))
+          Preferences.set("linshare.BASE_URL", '/' + BASE_URL.replace(/^\//, ''))
           Preferences.set("linshare.USER_EMAIL", USER_EMAIL)
           Preferences.set("linshare.MUST_SAVE", MUST_SAVE)
 

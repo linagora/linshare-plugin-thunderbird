@@ -43,6 +43,10 @@
             "type": "string"
           },
           {
+            "name": "baseUrl",
+            "type": "string"
+          },
+          {
             "name": "userEmail",
             "type": "string"
           },

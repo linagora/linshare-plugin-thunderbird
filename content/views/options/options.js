@@ -1,4 +1,5 @@
 var serverUrlElem = document.getElementById('serverUrl');
+var baseUrlElem = document.getElementById('baseUrl');
 var userEmailElem = document.getElementById('userEmail');
 var userPasswordElem = document.getElementById('userPassword');
 var mustSaveElem = document.getElementById('mustSave');
@@ -24,7 +25,7 @@ function init() {
 
 saveSattings.onclick = function (e) {
   e.preventDefault();
-  browser.linshare.saveUserAccount(serverUrlElem.value, userEmailElem.value, userPasswordElem.value, mustSaveElem.checked).then(credentials => {
+  browser.linshare.saveUserAccount(serverUrlElem.value, baseUrlElem.value, userEmailElem.value, userPasswordElem.value, mustSaveElem.checked).then(credentials => {
     if (credentials.success == true) {
       alertify.success(credentials.MESSAGE);
     } else {
@@ -49,6 +50,11 @@ function setProfilInfo(userInfos) {
     document.getElementById('v1').style.display = "block";
     serverUrlElem.value = userInfos.SERVER_URL;
   }
+
+  if (userInfos.BASE_URL && userInfos.BASE_URL != 'undefined') {
+    baseUrlElem.value = userInfos.BASE_URL;
+  }
+
   if (userInfos.USER_EMAIL && userInfos.USER_EMAIL != 'undefined') {
     userEmailElem.value = userInfos.USER_EMAIL;
   }
