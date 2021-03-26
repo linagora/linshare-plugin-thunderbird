@@ -1,0 +1,61 @@
+stages:
+  - check
+  - build
+
+variables:
+    MAVEN_OPTS: "-Djava.awt.headless=true -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+.cache-tpl: &cache-tpl
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - $CI_PROJECT_DIR/.m2/repository
+  policy: pull
+
+.curl-tpl: &curl-tpl
+  variables:
+    GIT_STRATEGY: none
+  tags:
+    - curl
+
+check_author:
+  image: docker-registry.linagora.com:5000/lgs-releases/gitlab-integrity-checks:latest
+  stage: check
+  variables:
+    GIT_DEPTH: "1"
+  tags:
+    - ultralight
+  script:
+    - check_author.py check "$GITLAB_USER_EMAIL" "$GITLAB_USER_NAME" --no-accents
+  except:
+    refs:
+      - tags@linagora/lgs/linshare/products/linshare-core
+      - /^release-.*/@linagora/lgs/linshare/products/linshare-core
+
+prepare:
+  image: maven:3.6-jdk-11
+  stage: check
+  tags:
+    - docker
+  cache:
+    <<: *cache-tpl
+    policy: pull-push
+  script:
+    - mvn dependency:go-offline --batch-mode
+    - mvn dependency:resolve --batch-mode
+    - mvn dependency:resolve-plugins --batch-mode
+
+build:
+  stage: build
+  tags:
+    - docker
+  image: maven:3.6-jdk-11
+  cache:
+    <<: *cache-tpl
+  artifacts:
+    paths:
+      - target/linshare.xpi
+    expire_in: 1 week
+  script:
+    - apt update
+    - apt install zip
+    - mvn clean package
