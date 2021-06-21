@@ -1,8 +1,15 @@
-if ("composeAction" in browser) {
-  browser.composeAction.onClicked.addListener(async (tab) => {
-    await sendToLinshare(tab).then(async (res) => { if (res.ok) { await notify(tab) } else { browser.linshare.prompt('alert', 'Something went wrong', res.message) } });
-  });
-}
+browser.linshare.onSendBtnClick.addListener(async (id) => {
+  let tabs = await browser.tabs.query({ windowType: "messageCompose", windowId: id - 1 })
+  let currentTab = tabs[0]
+  await sendToLinshare(currentTab)
+    .then(async (res) => {
+      if (res.ok) await notify(currentTab)
+      else {
+        browser.linshare.prompt('alert', 'Something went wrong', res.message)
+      }
+
+    })
+})
 if ("browserAction" in browser) {
   browser.browserAction.onClicked.addListener(async () => {
     browser.tabs.create({ url: browser.extension.getURL("content/views/options/options.html") });

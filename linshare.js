@@ -4,6 +4,7 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { ExtensionSupport } = ChromeUtils.import("resource:///modules/ExtensionSupport.jsm");
 var { ExtensionCommon } = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 var { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+var { ExtensionSupport } = ChromeUtils.import("resource:///modules/ExtensionSupport.jsm");
 var { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 var extension = ExtensionParent.GlobalManager.getExtension("linshare@linagora");
@@ -11,6 +12,47 @@ var { LinshareUtils } = ChromeUtils.import(extension.rootURI.resolve("modules/li
 var { LinshareAPI } = ChromeUtils.import(extension.rootURI.resolve("modules/linshareAPI.jsm"));
 
 this.linshare = class extends ExtensionCommon.ExtensionAPI {
+  onStartup() {
+    console.log("loading linshare Plugin")
+    Services.io
+      .getProtocolHandler("resource")
+      .QueryInterface(Ci.nsIResProtocolHandler)
+      .setSubstitution("linshare", this.extension.rootURI);
+
+    let aomStartup = Cc["@mozilla.org/addons/addon-manager-startup;1"].getService(
+      Ci.amIAddonManagerStartup
+    );
+    let manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
+
+    this.chromeHandle = aomStartup.registerChrome(manifestURI, [
+      ["content", "linshare", "assets/"],
+    ]);
+    let sendingEvt = (winId) => { return this.extension.emit('linshare.onSendBtnClick', winId) }
+
+    ExtensionSupport.registerWindowListener("linshare-send-btn", {
+      chromeURLs: [
+        "chrome://messenger/content/messengercompose/messengercompose.xhtml"
+      ],
+      onLoadWindow: function (win) {
+        console.log("chrome://linshare/resource/content/views/composerOverlay.jsm")
+        var { composerOverlay } = ChromeUtils.import(extension.rootURI.resolve("content/views/composerOverlay.jsm"));
+        composerOverlay(sendingEvt, win)
+      },
+    });
+  }
+  onShutdown(isAppShutdown) {
+    if (isAppShutdown) {
+      return;
+    }
+    ExtensionSupport.unregisterWindowListener("linshare-send-btn");
+
+    Services.io
+      .getProtocolHandler("resource")
+      .QueryInterface(Ci.nsIResProtocolHandler)
+      .setSubstitution("gdata-provider", null);
+
+    Services.obs.notifyObservers(null, "startupcache-invalidate");
+  }
   getAPI(context) {
     context.callOnClose(this);
 
@@ -89,7 +131,25 @@ this.linshare = class extends ExtensionCommon.ExtensionAPI {
         },
         sendMail() {
           LinshareUtils.getCurrentComposeWindow().goDoCommand('cmd_sendNow');
-        }
+        },
+        //=============== EVENTS ===============//
+        onSendBtnClick: new ExtensionCommon.EventManager({
+          context,
+          name: "linshare.onSendBtnClick",
+          register: (fire, options) => {
+            let listener = async (event, id) => {
+              console.log('linshare.onSendBtnClick')
+              await fire.async(id)
+              return event;
+            };
+
+            context.extension.on("linshare.onSendBtnClick", listener);
+            return () => {
+              context.extension.off("linshare.onSendBtnClick", listener);
+            };
+          },
+        }).api(),
+
 
       }
     };

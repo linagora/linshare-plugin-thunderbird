@@ -6,31 +6,21 @@
     }
   },
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "scripts": ["background.js"]
   },
   "experiment_apis": {
     "linshare": {
       "schema": "schema.json",
       "parent": {
-        "scopes": [
-          "addon_parent"
-        ],
-        "paths": [
-          [
-            "linshare"
-          ]
-        ],
-        "script": "linshare.js"
+        "scopes": ["addon_parent"],
+        "paths": [["linshare"]],
+        "script": "linshare.js",
+        "events": ["startup"]
       }
     }
   },
   "default_locale": "fr",
-  "compose_action": {
-    "default_title": "__MSG_shareButton__",
-    "default_icon": "assets/linshare.png"
-  },
+
   "browser_action": {
     "default_title": "__MSG_extensionName__",
     "default_icon": "assets/linshare.png"

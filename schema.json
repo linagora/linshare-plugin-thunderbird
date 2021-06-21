@@ -111,6 +111,14 @@
         "async": false,
         "parameters": []
       }
+    ],
+    "events":[
+      {
+        "name": "onSendBtnClick",
+        "type": "function",
+        "parameters": []
+      }
+      
     ]
   }
 ]
