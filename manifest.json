@@ -9,11 +9,11 @@
     "scripts": ["background.js"]
   },
   "experiment_apis": {
-    "linshare": {
+    "linshareExtAPI": {
       "schema": "schema.json",
       "parent": {
         "scopes": ["addon_parent"],
-        "paths": [["linshare"]],
+        "paths": [["linshareExtAPI"]],
         "script": "linshare.js",
         "events": ["startup"]
       }
@@ -35,11 +35,7 @@
     "32": "assets/linshare.png"
   },
   "manifest_version": 2,
-  "permissions": [
-    "storage",
-    "compose",
-    "tabs"
-  ],
+  "permissions": ["storage", "compose", "tabs"],
   "name": "__MSG_extensionName__",
-  "version": "2.0.1-SNAPSHOT"
+  "version": "2.0.3-SNAPSHOT"
 }

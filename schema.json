@@ -1,124 +1,130 @@
 [
-  {
-    "namespace": "linshare",
-    "functions": [
-      {
-        "name": "sendAndShare",
-        "type": "function",
-        "description": "send and share attachement with Linshare.",
-        "async": true,
-        "parameters": [
-          {
-            "name": "files",
-            "type": "any"
-          },
-          {
-            "name": "recipients",
-            "type": "any"
-          }
-        ]
-      },
-      {
-        "name": "getUserSettings",
-        "type": "function",
-        "description": "showUserSettings.",
-        "async": true,
-        "parameters": []
-      },
-      {
-        "name": "getUserPrefs",
-        "type": "function",
-        "description": "showUserPrefs.",
-        "async": true,
-        "parameters": []
-      },
-      {
-        "name": "saveUserAccount",
-        "type": "function",
-        "description": "saveUserSettings.",
-        "async": true,
-        "parameters": [
-          {
-            "name": "serverUrl",
-            "type": "string"
-          },
-          {
-            "name": "baseUrl",
-            "type": "string"
-          },
-          {
-            "name": "userEmail",
-            "type": "string"
-          },
-          {
-            "name": "userPassword",
-            "type": "string"
-          },
-          {
-            "name": "mustSave",
-            "type": "boolean"
-          }
-        ]
-      },
-      {
-        "name": "saveUserPrefs",
-        "type": "function",
-        "description": "updateUserPrefs.",
-        "async": true,
-        "parameters": [
-          {
-            "name": "msg",
-            "type": "string"
-          },
-          {
-            "name": "accusedOfSharing",
-            "type": "boolean"
-          },
-          {
-            "name": "noDownload",
-            "type": "boolean"
-          },
-          {
-            "name": "secureShare",
-            "type": "boolean"
-          }
-        ]
-      },
-      {
-        "name": "prompt",
-        "type": "function",
-        "description": "prompt msg notification.",
-        "async": false,
-        "parameters": [
-          {
-            "name": "type",
-            "type": "string"
-          },
-          {
-            "name": "title",
-            "type": "string"
-          },
-          {
-            "name": "msg",
-            "type": "string"
-          }
-        ]
-      },
-      {
-        "name": "sendMail",
-        "type": "function",
-        "description": "send email + linshare message.",
-        "async": false,
-        "parameters": []
-      }
-    ],
-    "events":[
-      {
-        "name": "onSendBtnClick",
-        "type": "function",
-        "parameters": []
-      }
-      
-    ]
-  }
+	{
+		"namespace": "linshareExtAPI",
+		"functions": [
+			{
+				"name": "sendAndShare",
+				"type": "function",
+				"description": "send and share attachement with Linshare.",
+				"async": true,
+				"parameters": [
+					{
+						"name": "files",
+						"type": "any"
+					},
+					{
+						"name": "recipients",
+						"type": "any"
+					}
+				]
+			},
+			{
+				"name": "getUserSettings",
+				"type": "function",
+				"description": "showUserSettings.",
+				"async": true,
+				"parameters": []
+			},
+			{
+				"name": "getUserPrefs",
+				"type": "function",
+				"description": "showUserPrefs.",
+				"async": true,
+				"parameters": []
+			},
+			{
+				"name": "saveUserAccount",
+				"type": "function",
+				"description": "saveUserSettings.",
+				"async": true,
+				"parameters": [
+					{
+						"name": "serverUrl",
+						"type": "string"
+					},
+					{
+						"name": "baseUrl",
+						"type": "string"
+					},
+					{
+						"name": "userEmail",
+						"type": "string"
+					},
+					{
+						"name": "userPassword",
+						"type": "string"
+					},
+					{
+						"name": "mustSave",
+						"type": "boolean"
+					}
+				]
+			},
+			{
+				"name": "saveUserPrefs",
+				"type": "function",
+				"description": "updateUserPrefs.",
+				"async": true,
+				"parameters": [
+					{
+						"name": "msg",
+						"type": "string"
+					},
+					{
+						"name": "accusedOfSharing",
+						"type": "boolean"
+					},
+					{
+						"name": "noDownload",
+						"type": "boolean"
+					},
+					{
+						"name": "secureShare",
+						"type": "boolean"
+					}
+				]
+			},
+			{
+				"name": "prompt",
+				"type": "function",
+				"description": "prompt msg notification.",
+				"async": false,
+				"parameters": [
+					{
+						"name": "type",
+						"type": "string"
+					},
+					{
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"name": "msg",
+						"type": "string"
+					}
+				]
+			},
+			{
+				"name": "sendMail",
+				"type": "function",
+				"description": "send email + linshare message.",
+				"async": false,
+				"parameters": []
+			},
+			{
+				"name": "resetPrefs",
+				"type": "function",
+				"description": "remove all but serverurl prefs from TB storage",
+				"async": true,
+				"parameters": []
+			}
+		],
+		"events": [
+			{
+				"name": "onSendBtnClick",
+				"type": "function",
+				"parameters": []
+			}
+		]
+	}
 ]

@@ -1,61 +1,68 @@
 var EXPORTED_SYMBOLS = ["ROUTES"];
 
 const ROUTES = {
-  "uploadFileUrl": {
-    "v1": {
-      "ctype": "application/xml",
-      "url": "/webservice/rest/document/upload"
+  // Order is used for fallback when testing version
+  suportedBaseVersion: { v5: "v5", v4: "v4", v2: "v2" },
+  uploadFileUrl: {
+    v1: {
+      ctype: "application/xml",
+      url: "/webservice/rest/document/upload",
     },
-    "v2": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/document/upload"
+    v2: {
+      ctype: "application/json",
+      url: "/webservice/rest/document/upload",
     },
-    "v4": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/user/v4/documents"
-    }
+    base: {
+      ctype: "application/json",
+      url: "/webservice/rest/user/#base#/documents",
+    },
   },
-  "multipleShareDocumentsUrl": {
-    "v1": {
-      "ctype": "application/xml",
-      "url": "/webservice/rest/share/multiplesharedocuments"
+  multipleShareDocumentsUrl: {
+    v1: {
+      ctype: "application/xml",
+      url: "/webservice/rest/share/multiplesharedocuments",
     },
-    "v2": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/user/v2/shares"
+    base: {
+      ctype: "application/json",
+      url: "/webservice/rest/user/#base#/shares",
     },
-    "v4": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/user/v4/shares"
-    }
   },
-  "authentication": {
-    "v1": {
-      "ctype": "application/xml",
-      "url": "/webservice/rest/plugin/information"
+  APIVersion: {
+    v1: {
+      ctype: "application/xml",
+      url: "/webservice/rest/plugin/information",
     },
-    "v2": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/user/v2/authentication/version"
+    base: {
+      ctype: "application/json",
+      url: "/webservice/rest/user/#base#/authentication/version",
     },
-    "v4": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/user/v4/authentication/version"
-    }
   },
-  "apiVersion": {
-    "url": "/webservice/rest/user/v2/authentication/version"
+  authentication: {
+    v1: {
+      ctype: "application/xml",
+      url: "/webservice/rest/plugin/information",
+    },
+    base: {
+      ctype: "application/json",
+      url: "/webservice/rest/user/#base#/authentication/authorized",
+    },
   },
-  "getFunctionalities": {
-    "v4": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/user/v2/functionalities"
-    }
+  getFunctionalities: {
+    base: {
+      ctype: "application/json",
+      url: "/webservice/rest/user/#base#/functionalities",
+    },
   },
-  "getSharedKey": {
-    "v4": {
-      "ctype": "application/json",
-      "url": "/webservice/rest/user/v4/authentication/2fa/"
-    }
-  }
-}
+  getSharedKey: {
+    base: {
+      ctype: "application/json",
+      url: "/webservice/rest/user/#base#/authentication/2fa",
+    },
+  },
+  quota: {
+    base: {
+      ctype: "application/json",
+      url: "/webservice/rest/user/#base#/quota",
+    },
+  },
+};

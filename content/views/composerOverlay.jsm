@@ -18,25 +18,23 @@ function composerOverlay(sendingEvt, win) {
           `;
   win.document.documentElement.appendChild(style);
 
-  let composeTlbar = win.document.querySelector("#composeToolbar2")
-  let linshareBtn = win.document.createXULElement("toolbarbutton")
+  let composeTlbar = win.document.querySelector("#composeToolbar2");
+  let linshareBtn = win.document.createXULElement("toolbarbutton");
 
-  linshareBtn.class = "toolbarbutton-1"
-  linshareBtn.id = "linshare-send-btn"
-  linshareBtn.label = "Send&Share"
-  linshareBtn.tooltiptext = "Send attachement by LinShare"
+  linshareBtn.class = "toolbarbutton-1";
+  linshareBtn.id = "linshare-send-btn";
+  linshareBtn.label = "Send&Share";
+  linshareBtn.tooltiptext = "Send attachement by LinShare";
   linshareBtn.onclick = function () {
-    console.log("Sending by linshare")
-    let winId = win.windowUtils.currentInnerWindowID
-    sendingEvt(winId)
-  }
-  let tbDefaultset = composeTlbar.getAttribute("defaultset")
-  let newTbDefaultset = `linshare-send-btn,spacer,${tbDefaultset}`
-  composeTlbar.setAttribute('defaultset', 'spacer', newTbDefaultset)
+    console.log("Sending by linshare");
+    let winId = Services.wm.getMostRecentWindow("").windowGlobalChild.innerWindowId;
+    sendingEvt(winId);
+  };
+  let tbDefaultset = composeTlbar.getAttribute("defaultset");
+  let newTbDefaultset = `linshare-send-btn,spacer,${tbDefaultset}`;
+  composeTlbar.setAttribute("defaultset", "spacer", newTbDefaultset);
 
   if (composeTlbar) {
-    composeTlbar.insertBefore(linshareBtn, composeTlbar.childNodes[1])
+    composeTlbar.insertBefore(linshareBtn, composeTlbar.childNodes[1]);
   }
-
-
 }

@@ -1,193 +1,252 @@
 var EXPORTED_SYMBOLS = ["LinshareUtils"];
-
+var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 var { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 var extension = ExtensionParent.GlobalManager.getExtension("linshare@linagora");
-var { LinshareAPI } = ChromeUtils.import(extension.rootURI.resolve("modules/linshareAPI.jsm"));
-var infos = {}
+var { TBUIHandlers } = ChromeUtils.import(extension.rootURI.resolve("modules/TBUIHandlers.jsm"));
+
 
 var LinshareUtils = {
-  setInfos(infos) {
-    this.infos = infos
+  getRequestContext(ROUTES, endpoint, USER_INFOS, password, apiVersion = null) {
+    let { SERVER_URL, USER_EMAIL, API_VERSION, BASE_URL } = USER_INFOS;
+    if (apiVersion) API_VERSION = apiVersion;
+    let ctype = this.getCType(ROUTES, endpoint, API_VERSION);
+    let url = this.buildVersionUrl(ROUTES, endpoint, SERVER_URL, API_VERSION, BASE_URL);
+    let authorization = btoa(`${USER_EMAIL}:${password}`);
+    let headers = this.buidRequestHeaders(authorization, ctype, SERVER_URL);
+    return { headers, url, ctype };
   },
-  getInfos() {
-    return this.infos
+  buildShareRequest(headers, url, attachementsUuids, recipients, apiVersion, ctype) {
+    let requests = [];
+    let urlParams = apiVersion == "v1" ? this.useUrlParams(attachementsUuids) : [];
+    let init = {
+      method: "POST",
+      headers,
+    };
+    if (apiVersion == "v1") {
+      for (let i = 0; i < recipients.length; i++) {
+        urlParams.set("targetMail", recipients[i]);
+        let params = urlParams.toString();
+        init.params = urlParams;
+        requests.push({ url, init });
+      }
+    } else {
+      let body = this.buildRequestBody(attachementsUuids, recipients);
+      init.headers.append("accept", ctype);
+      init.body = JSON.stringify(body);
+      requests.push({ url, init });
+    }
+    return requests;
   },
-  getCurrentComposeWindow() {
-    return Services.wm.getMostRecentWindow("msgcompose");
-  },
-  async setUserPassword(SERVEUR_URL, USER_EMAIL, userPassword, check) {
-    let logins = Services.logins.findLogins(SERVEUR_URL, null, SERVEUR_URL);
-    if (logins != undefined && logins.length > 0) {
-      let login = logins.filter(l => l.username == USER_EMAIL)[0]
-      if (login && login.password && login.password == userPassword) {
-        return { 'MESSAGE': 'Your account was succesfuly checked, your credentials are saved ', 'success': true };
+  useUrlParams(attachementsUuids) {
+    const urlParams = new URLSearchParams();
+    for (let i = 0; i < attachementsUuids.length; i++) {
+      if (i == 0) {
+        urlParams.append("file", attachementsUuids[i]);
       } else {
-        if (check.ok) {
-          let newLogin = this.createLogin(SERVEUR_URL, USER_EMAIL, userPassword)
-          Services.logins.modifyLogin(login, newLogin)
-          return { 'MESSAGE': 'Your account was succesfuly checked, your credentials are updated', 'success': true };
-        } else {
-          return { 'MESSAGE': 'Something went wrong, please check your credentials', 'success': false };
-        }
+        urlParams.append("file" + i, attachementsUuids[i]);
       }
     }
-    if (check.ok) {
-      let loginInfo = this.createLogin(SERVEUR_URL, USER_EMAIL, userPassword)
-      Services.logins.addLogin(loginInfo);
-      return { 'MESSAGE': 'Your account was succesfuly checked, your credentials are updated', 'success': true };
-    } else {
-      return { 'MESSAGE': 'Something went wrong, please check your credentials', 'success': false };
-    }
+    return urlParams;
   },
-  createLogin(SERVEUR_URL, USER_EMAIL, userPassword) {
-    var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-      Components.interfaces.nsILoginInfo,
-      "init");
-    var loginInfo = new nsLoginInfo(SERVEUR_URL, null, SERVEUR_URL, USER_EMAIL, userPassword, "", "");
-    return loginInfo;
-  },
-  getUserPassword(SERVER_URL, USER_EMAIL) {
-    let logins = Services.logins.findLogins(SERVER_URL, null, SERVER_URL);
-    if (logins && logins.length > 0) {
-      let log = logins.filter(login => login.username == USER_EMAIL);
-      if (log) {
-        return log[0].password
-      }
-    }
-    return false;
-  },
-  prompt(type, title, msg) {
-    Services.prompt[type](null, title, msg)
-  },
-  checkPrefExist(name) {
-    if (Preferences.get(name)) {
-      return false;
-    }
-    return true;
-  },
-  isProfilsPrefsV4(SERVER_URL, USER_EMAIL, isSaved) {
-    let response = LinshareAPI.isPrefsEnable(SERVER_URL, USER_EMAIL);
-
-    response.then((prefs) => {
-      if (prefs.accusedOfSharing && prefs.accusedOfSharingOverride && (checkPrefExist("ACCUSED_OF_SHARING_OVERRIDE"))) {
-        Preferences.set("linshare.ACCUSED_OF_SHARING", prefs.accusedOfSharing);
-        Preferences.set("linshare.ACCUSED_OF_SHARING_OVERRIDE", prefs.accusedOfSharingOverride);
-        isSaved = { ...isSaved, 'ACCUSED_OF_SHARING': prefs.accusedOfSharing, "ACCUSED_OF_SHARING_OVERRIDE": prefs.accusedOfSharingOverride };
-      }
-
-      if (prefs.noDownload && prefs.noDownloadOverride && (checkPrefExist("NO_DOWNLOAD_OVERRIDE"))) {
-        Preferences.set("linshare.NO_DOWNLOAD", prefs.noDownload);
-        Preferences.set("linshare.NO_DOWNLOAD_OVERRIDE", prefs.noDownloadOverride);
-        isSaved = { ...isSaved, 'NO_DOWNLOAD': noDownload, "NO_DOWNLOAD_OVERRIDE": prefs.noDownloadOverride };
-      }
-
-      if (prefs.secureShare && (checkPrefExist("SECURE_SHARE"))) {
-        Preferences.set("linshare.SECURE_SHARE", prefs.secureShare);
-        isSaved = { ...isSaved, 'SECURE_SHARE': prefs.secureShare };
-      }
-      return isSaved
+  buidRequestHeaders(authorization, ctype, serverUrl) {
+    let headers = new Headers({
+      Authorization: `Basic ${authorization}`,
+      redirect: "error",
+      "Content-Type": ctype,
+      Connection: "close",
+      Accept: ctype,
     });
-    return false
+    if (Services.cookies.cookieExists(serverUrl, "/", "JSESSIONID", {})) {
+      let cookies = Services.cookies.getCookiesFromHost(serverUrl, {});
+      let Cookie = `${cookies[cookies.length - 1].name}=${cookies[cookies.length - 1].value}`;
+      headers.append("Cookie", Cookie);
+      headers.delete("authorization");
+    }
+    return headers;
   },
-  isProfilsPrefsV2(isSaved) {
-    let accusedOfSharing = Preferences.get("linshare.ACCUSED_OF_SHARING");
-    if (accusedOfSharing) {
-      isSaved = { ...isSaved, 'ACCUSED_OF_SHARING': accusedOfSharing };
-    } else {
-      isSaved = { ...isSaved, 'ACCUSED_OF_SHARING': false };
+  buildRequestBody(attachementsUuids, recipients) {
+    let body = {
+      recipients: [],
+      documents: [],
+    };
+    attachementsUuids.forEach((attachementsUuid) => {
+      body.documents.push(attachementsUuid);
+    });
+    recipients.forEach((recipient) => {
+      body.recipients.push({ mail: recipient });
+    });
+
+    if (Preferences.get("linshare.ACCUSED_OF_SHARING")) {
+      body = {
+        ...body,
+        creationAcknowledgement: Preferences.get("linshare.ACCUSED_OF_SHARING"),
+      };
+    }
+    if (Preferences.get("linshare.SECURE_SHARE")) {
+      body = {
+        ...body,
+        secured: Preferences.get("linshare.SECURE_SHARE"),
+      };
+    }
+    if (Preferences.get("linshare.NO_DOWNLOAD")) {
+      let d = new Date();
+      d.setDate(d.getDate() + 15);
+      let timestamp = d.getTime();
+      body = {
+        ...body,
+        expirationDate: timestamp,
+      };
     }
 
-    let noDownload = Preferences.get("linshare.NO_DOWNLOAD");
-    if (noDownload) {
-      isSaved = { ...isSaved, 'NO_DOWNLOAD': noDownload };
-    } else {
-      isSaved = { ...isSaved, 'NO_DOWNLOAD': false };
-    }
-
-    let secureShare = Preferences.get("linshare.SECURE_SHARE");
-    if (noDownload) {
-      isSaved = { ...isSaved, 'SECURE_SHARE': secureShare };
-    } else {
-      isSaved = { ...isSaved, 'SECURE_SHARE': false };
-    }
-    return isSaved;
+    return body;
   },
-  isProfilPrefs(API_VERSION) {
-    let message = Preferences.get("linshare.MESSAGE");
-    let isSaved = message ? { 'MESSAGE': message } : { 'MESSAGE': 'Un deuxième courriel vous sera adressé ultérieurement pour télécharger vos fichiers depuis l\'application de partage LinShare.' };
 
-    if (API_VERSION >= 4) {
-      return this.isProfilsPrefsV4(isSaved);
-    } else {
-      return this.isProfilsPrefsV2(isSaved);
+  handleResponse(response, field = null) {
+    let contentType = response.type;
+    if (contentType.includes("application/json")) {
+      return field ? JSON.parse(response.body)[field] : JSON.parse(response.body);
+    } else if (contentType.includes("application/xml")) {
+      var oParser = new DOMParser();
+      var text = oParser.parseFromString(response.body, "application/xml");
+      return field ? text.getElementsByTagName(field) : text;
     }
   },
-  async setUserPreferences(API_VERSION, message, accusedOfSharing, noDownload, secureShare) {
-    if (message.length > 0) {
-      Preferences.set("linshare.MESSAGE", message);
-    } else {
-      return { 'MESSAGE': 'message empty', 'success': false }
+  async handleError(err) {
+    switch (err.status) {
+      case 420:
+        Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", "The account quota has been reached.");
+        throw new Error("The account quota has been reached.");
+      case 451:
+        Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", "File contains virus");
+      default:
+        if (JSON.parse(err.body).message) {
+          Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", JSON.parse(err.body).message);
+          if ((JSON.parse(err.body).errCode = "46011")) {
+            throw new Error(JSON.parse(err.body).message);
+          }
+        } else {
+          Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", "Uploading failed");
+        }
     }
-
-    if (API_VERSION >= 4 && Preferences.get("linshare.ACCUSED_OF_SHARING_OVERRIDE")) {
-      Preferences.set("linshare.ACCUSED_OF_SHARING", accusedOfSharing);
-    } else if (API_VERSION < 4) {
-      Preferences.set("linshare.ACCUSED_OF_SHARING", accusedOfSharing);
-    }
-    if (API_VERSION >= 4 && Preferences.get("linshare.NO_DOWNLOAD_OVERRIDE")) {
-      Preferences.set("linshare.NO_DOWNLOAD", noDownload);
-    } else if (API_VERSION < 4) {
-      Preferences.set("linshare.NO_DOWNLOAD", noDownload);
-    }
-    Preferences.set("linshare.SECURE_SHARE", secureShare);
-    return { 'MESSAGE': 'saved', 'success': true };
   },
-  createProgressList() {
-    let composer = this.getCurrentComposeWindow()
-    let composerNotification = composer.document.querySelector('#compose-notification-bottom')
-    for (let currentElem of composerNotification.children) {
-      composerNotification.removeChild(currentElem)
-    }
-    let progressElement = composer.document.createElement('div')
-    progressElement.id = "linshare-progress-list"
-    composerNotification.appendChild(progressElement)
-
+  _fetch(url, opts = {}, progressElem = null) {
+    return new Promise((res, rej) => {
+      var xhr = new XMLHttpRequest();
+      xhr.open(opts.method || "get", url);
+      xhr.withCredentials = true;
+      for (var pair of opts.headers.entries() || {}) {
+        if (pair[0] == "cookie") pair[0] = "Cookie";
+        xhr.setRequestHeader(pair[0], pair[1]);
+      }
+      xhr.onload = (e) =>
+        res({
+          type: e.target.getResponseHeader("Content-Type"),
+          body: e.target.response,
+          headers: this.makeResponseHeaders(e.target.getAllResponseHeaders()),
+          status: e.target.status,
+        });
+      if (progressElem) {
+        TBUIHandlers.getCurrentComposeWindow().onclose = function (e) {
+          e.stopPropagation();
+          let confirm = Services.prompt.confirm(
+            null,
+            "Abort uploading",
+            "Uploading to linshare is in process, do you want to stop it"
+          );
+          if (confirm) {
+            xhr.abort();
+          } else {
+            e.preventDefault();
+          }
+        };
+      }
+      xhr.onerror = rej;
+      if (xhr.upload && progressElem instanceof Element)
+        xhr.upload.onprogress = function ({ loaded: l, total: t }) {
+          let percent = `${Math.round((l / t) * 100)}%`;
+          let progressbar = progressElem.querySelector("[aria-valuenow]");
+          progressbar.style.width = percent;
+          progressbar.textContent = percent;
+        };
+      if (opts.body) {
+        let body = opts.body;
+        xhr.send(body);
+      } else if (opts.params) {
+        let params = opts.params;
+        xhr.send(params);
+      } else {
+        xhr.send();
+      }
+    });
   },
-  createProgress(file) {
-    let composer = this.getCurrentComposeWindow()
-    let composerNotification = composer.document.querySelector('#linshare-progress-list')
+  makeResponseHeaders(str) {
+    let headers = str
+      .match(/.*/g)
+      .filter((e) => e)
+      .map((e) => {
+        return e.split(":");
+      });
+    return new Headers(Object.fromEntries(headers));
+  },
 
-    let progressContent = `
-    <div class="lin-progress-content row" style="width:100vw; padding:10px 3px 0">
-      <div class="col-8 ml-2" id="text">
-        <span id="lin-file-name">Uploading ${file.name} to LinShare</span>
-      </div>
-      <div class="col">
-        <div class="progress md-progress" style="height: 20px ; width: 100%; float:left">
-          <div class="progress-bar" role="progressbar" style="width: 5%; height: 20px" aria-valuenow="0" aria-valuemin="0"
-            aria-valuemax="100">%</div>
-        </div>
-      </div>
-    </div>
-    `
-    let progressElement = composer.document.createElement('div')
-    progressElement.innerHTML = progressContent.replace(/[\n]*/g, '').replaceAll(/\s{2,}/g, ' ').trim()
-    let jQueryScript = composer.document.createElement('script')
-    jQueryScript.src = extension.getURL('skin/js/jquery-3.5.1.slim.min.js')
-    let bootstrapScript = composer.document.createElement('script')
-    bootstrapScript.src = extension.getURL('skin/js/bootstrap.min.js')
-    let link = composer.document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = extension.getURL('skin/css/bootstrap.min.css')
-    progressElement.appendChild(link)
-    progressElement.appendChild(jQueryScript)
-    progressElement.appendChild(bootstrapScript)
+  async getwantedPrefs(res) {
+    let prefs = {};
 
-    composerNotification.appendChild(progressElement)
-    return progressElement
-  }
-}
-console.log('Loading LinshareUtils module');
+    let wantedPrefs = {
+      SECOND_FACTOR_AUTHENTICATION: "2fa",
+      SHARE_CREATION_ACKNOWLEDGEMENT_FOR_OWNER: "accusedOfSharing",
+      UNDOWNLOADED_SHARED_DOCUMENTS_ALERT: "noDownload",
+      UPLOAD_REQUEST__SECURED_URL: "secureShare",
+    };
+
+    for (let pref of res) {
+      if (Object.keys(wantedPrefs).includes(pref.identifier)) {
+        if (pref.enable && pref.canOverride) prefs[wantedPrefs[pref.identifier]] = pref.value;
+      }
+    }
+    return prefs;
+  },
+  needTOTPCode() {
+    let code = {};
+    let patern = new RegExp("^[0-9]{6}");
+    let dialog;
+    while (!patern.test(code.value)) {
+      dialog = Services.prompt.prompt(
+        TBUIHandlers.getCurrentComposeWindow(),
+        "TOTP code",
+        "Saisissez le code généré par l'application FreeOTP",
+        code,
+        null,
+        {
+          value: false,
+        }
+      );
+      if (!dialog) {
+        return false;
+      }
+    }
+    return code.value;
+  },
+  buildVersionUrl(ROUTES, endpoint, SERVER_URL, API_VERSION, BASE_URL) {
+    let routeUrl = "";
+    if (ROUTES[endpoint][API_VERSION]?.url) {
+      routeUrl = ROUTES[endpoint][API_VERSION].url;
+    } else if (Object.keys(ROUTES.suportedBaseVersion).includes(API_VERSION)) {
+      routeUrl = ROUTES[endpoint].base.url.replace(/#base#/, ROUTES.suportedBaseVersion[API_VERSION]);
+    }
+    return `${SERVER_URL}/${BASE_URL}${routeUrl}`;
+  },
+  getCType(ROUTES, endpoint, API_VERSION) {
+    let ctype = "";
+    if (ROUTES[endpoint][API_VERSION]?.ctype) {
+      ctype = ROUTES[endpoint][API_VERSION].ctype;
+    } else if (Object.keys(ROUTES.suportedBaseVersion).includes(API_VERSION)) {
+      ctype = ROUTES[endpoint].base.ctype;
+    }
+    return ctype;
+  },
+};
+console.log("Loading LinshareUtils module");
