@@ -1,0 +1,53 @@
+let Services;
+try {
+  const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
+  Services = module.Services;
+} catch (e) {
+  try {
+    const module = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Services = module.Services;
+  } catch (e2) {
+    if (typeof Services === 'undefined') {
+      throw e;
+    }
+  }
+}
+
+export function composerOverlay(sendingEvt, win) {
+
+  let style = win.document.createElement("style");
+  style.textContent = `
+            
+            #linshare-send-btn:before {
+              content: "";
+              display: -moz-box;
+              background-image : url(chrome://linshare/content/linshare.png);
+              background-repeat : no-repeat;
+              background-size: contain;
+              background-position : center;
+              width:25px;
+              height:20px;
+            }
+          `;
+  win.document.documentElement.appendChild(style);
+
+  let composeTlbar = win.document.querySelector("#composeToolbar2");
+  let linshareBtn = win.document.createXULElement("toolbarbutton");
+
+  linshareBtn.class = "toolbarbutton-1";
+  linshareBtn.id = "linshare-send-btn";
+  linshareBtn.label = "Send&Share";
+  linshareBtn.tooltiptext = "Send attachement by LinShare";
+  linshareBtn.onclick = function () {
+    console.log("Sending by linshare");
+    let winId = Services.wm.getMostRecentWindow("").windowGlobalChild.innerWindowId;
+    sendingEvt(winId);
+  };
+  let tbDefaultset = composeTlbar.getAttribute("defaultset");
+  let newTbDefaultset = `linshare-send-btn,spacer,${tbDefaultset}`;
+  composeTlbar.setAttribute("defaultset", "spacer", newTbDefaultset);
+
+  if (composeTlbar) {
+    composeTlbar.insertBefore(linshareBtn, composeTlbar.childNodes[1]);
+  }
+}

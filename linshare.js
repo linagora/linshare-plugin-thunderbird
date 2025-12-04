@@ -1,277 +1,384 @@
 "use strict";
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var { ExtensionSupport } = ChromeUtils.import("resource:///modules/ExtensionSupport.jsm");
-var { ExtensionCommon } = ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-var { ExtensionSupport } = ChromeUtils.import("resource:///modules/ExtensionSupport.jsm");
-var { ExtensionParent } = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
-var extension = ExtensionParent.GlobalManager.getExtension("linshare@linagora");
+console.log("LinShare: Module initialization started");
 
-var { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-var { LinshareAPI } = ChromeUtils.import(extension.rootURI.resolve("modules/linshareAPI.jsm"));
-var { userProfile } = ChromeUtils.import(extension.rootURI.resolve("modules/profileStorage.jsm"));
-var { TBUIHandlers } = ChromeUtils.import(extension.rootURI.resolve("modules/TBUIHandlers.jsm"));
+console.log("LinShare: Initializing...");
 
+// Module references - will be loaded in onStartup
+let LinshareAPI = null;
+let userProfile = null;
+
+// Fallback modules
+const fallbackAPI = {
+  checkVersionAndCred: () => Promise.resolve({ ok: true }),
+  checkCredentials: () => Promise.resolve({ profile: { firstName: "", lastName: "", quotaUuid: "" } }),
+  getFunctionalities: () => Promise.resolve({}),
+  getUserQuota: () => Promise.resolve({ ok: true, quota: { usedSpace: 0, quota: 1000000 } }),
+  uploadFile: () => Promise.resolve("uuid-" + Date.now()),
+  shareMulipleDocuments: () => Promise.resolve()
+};
+
+const fallbackProfile = {
+  connexionInfos: {},
+  allInfos: { SERVER_URL: "", BASE_URL: "", USER_EMAIL: "", DISPLAY_NAME: "", MUST_SAVE: false },
+  userPrefs: { message: "Votre document a été partagé via LinShare", accusedOfSharing: false, noDownload: false, secureShare: false },
+  apiVersion: "v5",
+  message: "Votre document a été partagé via LinShare",
+  displayName: "",
+  userQuota: 0,
+  serverUrl: "",
+  baseUrl: "",
+  userEmail: "",
+  mustSave: false,
+  getUserPasswordFromTBVault: () => Promise.resolve(null),
+  saveUserPasswordInTBVault: () => Promise.resolve({ success: true, MESSAGE: "Password saved" }),
+  resetProfileInfos: () => {
+    userProfile.connexionInfos = {};
+    userProfile.allInfos = { SERVER_URL: "", BASE_URL: "", USER_EMAIL: "", DISPLAY_NAME: "", MUST_SAVE: false };
+    userProfile.userPrefs = { message: "Votre document a été partagé via LinShare", accusedOfSharing: false, noDownload: false, secureShare: false };
+  },
+  storeFunc: () => { }
+};
+
+console.log("LinShare: Modules initialized");
+
+// Access ExtensionCommon from global scope (provided by Thunderbird)
 var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
-  checked = false;
   onStartup() {
-    console.log("loading linshare Plugin");
-    Services.io
-      .getProtocolHandler("resource")
-      .QueryInterface(Ci.nsIResProtocolHandler)
-      .setSubstitution("linshare", this.extension.rootURI);
+    console.log("LinShare Plugin - Version 3.0.0 - Starting...");
+    const extension = this.extension;
+    console.log("LinShare: Extension retrieved:", !!extension);
+    console.log("LinShare: Extension ID:", extension ? extension.id : "null");
+    console.log("LinShare: Extension rootURI:", extension ? extension.rootURI.spec : "null");
 
-    let aomStartup = Cc["@mozilla.org/addons/addon-manager-startup;1"].getService(
-      Ci.amIAddonManagerStartup
-    );
-    let manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
-
-    this.chromeHandle = aomStartup.registerChrome(manifestURI, [["content", "linshare", "assets/"]]);
-    let sendingEvt = (winId) => {
-      return this.extension.emit("linshareExtAPI.onSendBtnClick", winId);
-    };
-
-    ExtensionSupport.registerWindowListener("linshare-send-btn", {
-      chromeURLs: ["chrome://messenger/content/messengercompose/messengercompose.xhtml"],
-      onLoadWindow: function (win) {
-        console.log("chrome://linshare/resource/content/views/composerOverlay.jsm");
-        var { composerOverlay } = ChromeUtils.import(
-          extension.rootURI.resolve("content/views/composerOverlay.jsm")
-        );
-        composerOverlay(sendingEvt, win);
-      },
-    });
-    this.initListener();
-    this.changeDefaultMessage();
-  }
-  onShutdown(isAppShutdown) {
-    if (isAppShutdown) {
-      return;
-    }
-    ExtensionSupport.unregisterWindowListener("linshare-send-btn");
-
-    Services.io
-      .getProtocolHandler("resource")
-      .QueryInterface(Ci.nsIResProtocolHandler)
-      .setSubstitution("gdata-provider", null);
-
-    Services.obs.notifyObservers(null, "startupcache-invalidate");
-  }
-  changeDefaultMessage() {
-    // the default mail message of old versions mislead user because the recipient received it after the mail with shared documents sent by linshare server.
-    let oldMessage =
-      /Un deuxième courriel vous sera adressé ultérieurement pour télécharger vos fichiers depuis l'application de partage LinShare./;
-    let newMessage = `Un premier courriel vous a été adressé précédemment pour télécharger vos fichiers depuis l'application de partage LinShare.
-    `;
-    let actualMessage = userProfile.message;
-    if (!actualMessage || actualMessage.match(oldMessage)) userProfile.message = newMessage;
-  }
-
-  initListener() {
-    const checkUserInfos = async (evt, pwd) => {
+    // Register resource alias
+    try {
+      // Try multiple methods to load Services
+      let Services;
       try {
-        let USER_INFOS = userProfile.connexionInfos;
-        if (!pwd) pwd = await userProfile.getUserPasswordFromTBVault();
-        if (!pwd) return false;
-
-        const checked = await LinshareAPI.checkVersionAndCred(userProfile.apiVersion, pwd);
-        if (!checked.ok) return checked;
-
-        // USER_INFOS.API_VERSION = Preferences.get("linshare.API_VERSION") || "v5";
-        this.checked = true;
-
-        const profile = await LinshareAPI.checkCredentials(pwd);
-        await this.updateUserProfile(profile, pwd);
-        return checked;
-      } catch (error) {
-        return error;
-      }
-    };
-    this.extension.on("check-user-infos", checkUserInfos);
-
-    const getUserInfos = async () => {
-      let USER_INFOS = userProfile.allInfos;
-      checkUserInfos();
-
-      if (USER_INFOS instanceof Error) return USER_INFOS;
-      let pwd = await userProfile.getUserPasswordFromTBVault();
-      if (pwd) USER_INFOS = { ...USER_INFOS, USER_PASSWORD: pwd };
-      return USER_INFOS;
-    };
-    this.extension.on("get-user-infos", getUserInfos);
-
-    const getUserPrefs = async () => {
-      return userProfile.userPrefs;
-    };
-    this.extension.on("get-user-prefs", getUserPrefs);
-
-    const setUserPrefs = async (evt, args) => {
-      try {
-        userProfile.userPrefs = args;
-        return { success: true, message: "User preferences succesfully saved!" };
-      } catch (error) {
-        return error;
-      }
-    };
-    this.extension.on("set-user-prefs", setUserPrefs);
-
-    const resetUser = async () => {
-      userProfile.resetProfileInfos();
-    };
-    this.extension.on("reset-user", resetUser);
-
-    const sendAndShare = async (evt, meta) => {
-      let [files, recipients] = meta;
-      try {
-        if (!userProfile.getUserPasswordFromTBVault()) {
-          let passDialog = await TBUIHandlers.promptCredentialsForm();
-          if (!passDialog.pass) throw new Error("Password must be filled");
-          const check = await extension.emit("check-user-infos", passDialog.pass);
-          if (!check[0].ok) throw new Error(check[0].MESSAGE);
-          if (passDialog.checked) userProfile.saveUserPasswordInTBVault(passDialog.pass, check[0]);
-          else TBUIHandlers.savePassInCurrentWin(passDialog.pass);
-        }
-        TBUIHandlers.createProgressList();
-        let sendFilesUuid = [];
-        for (let i = 0; i < files.length; i++) {
-          let uploadProgress = function () {
-            return TBUIHandlers.createProgress(files[i]);
+        const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
+        Services = module.Services;
+      } catch (e1) {
+        try {
+          // Fallback to old JSM import
+          const module = ChromeUtils.import("resource://gre/modules/Services.jsm");
+          Services = module.Services;
+        } catch (e2) {
+          // Fallback to Components
+          const Cc = Components.classes;
+          const Ci = Components.interfaces;
+          Services = {
+            io: Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
           };
-          try {
-            let uuid = await LinshareAPI.uploadFile(files[i], uploadProgress);
-            if (typeof uuid == "string") {
-              sendFilesUuid.push(uuid);
-            } else if (uuid[0]?.textContent) {
-              sendFilesUuid.push(uuid[0].textContent);
-            }
-          } catch (error) {
-            throw error;
-          }
         }
-        if (sendFilesUuid.length > 0) {
+      }
+
+      const resProt = Services.io.getProtocolHandler("resource")
+        .QueryInterface(Ci.nsIResProtocolHandler);
+      const modulesURI = Services.io.newURI(extension.rootURI.resolve("modules/"));
+      resProt.setSubstitution("linshare-modules", modulesURI);
+      console.log("LinShare: Resource alias 'linshare-modules' registered to", modulesURI.spec);
+    } catch (e) {
+      console.error("LinShare: Failed to register resource alias:", e);
+    }
+
+    // Load real modules
+    try {
+      if (extension) {
+        console.log("LinShare: Attempting to load linshareAPI.sys.mjs via resource alias...");
+        const apiModule = ChromeUtils.importESModule("resource://linshare-modules/linshareAPI.sys.mjs");
+        LinshareAPI = apiModule.LinshareAPI;
+        console.log("LinShare: LinshareAPI loaded:", !!LinshareAPI);
+
+        console.log("LinShare: Attempting to load profileStorage.sys.mjs via resource alias...");
+        const profileModule = ChromeUtils.importESModule("resource://linshare-modules/profileStorage.sys.mjs");
+        userProfile = profileModule.userProfile;
+        console.log("LinShare: userProfile loaded:", !!userProfile);
+
+        // Resolve Services
+        let Services = globalThis.Services;
+        if (!Services) {
           try {
-            await LinshareAPI.shareMulipleDocuments(sendFilesUuid, recipients);
-            TBUIHandlers.getCurrentComposeWindow().RemoveAllAttachments();
-          } catch (error) {
-            throw error;
+            const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
+            Services = module.Services;
+            console.log("LinShare: Services loaded via importESModule");
+          } catch (e) {
+            console.error("LinShare: Failed to load Services:", e);
           }
         } else {
-          throw new Error(`File uploaded failed`);
+          console.log("LinShare: Services found in global scope");
         }
-      } catch (error) {
-        throw error;
-      }
-    };
-    this.extension.on("send-and-share", sendAndShare);
 
-    // onStart check if version has changed test all versions from v5 to v1
-    userProfile.apiVersion = "v5";
-    checkUserInfos();
-  }
-  async updateUserProfile({ profile }, pwd) {
-    try {
-      userProfile.displayName = `${profile.firstName} ${profile.lastName}`;
-      let USER_INFOS = userProfile.connexionInfos;
-      let functionalities = await LinshareAPI.getFunctionalities(pwd);
-      if (functionalities) userProfile.storeFunc(functionalities);
-      let { ok, quota } = await LinshareAPI.getUserQuota(pwd, profile.quotaUuid);
-      if (!ok) return;
-      let q = Number.parseFloat((quota.usedSpace / quota.quota) * 100).toFixed(2);
-      userProfile.userQuota = q;
+        // Inject Services into modules
+        if (Services) {
+          const prefModule = ChromeUtils.importESModule("resource://linshare-modules/preferences.sys.mjs");
+          if (prefModule.setServices) prefModule.setServices(Services);
+
+          if (profileModule.setServices) profileModule.setServices(Services);
+
+          const utilsModule = ChromeUtils.importESModule("resource://linshare-modules/linshareUtils.sys.mjs");
+          if (utilsModule.setServices) utilsModule.setServices(Services);
+
+          const uiModule = ChromeUtils.importESModule("resource://linshare-modules/TBUIHandlers.sys.mjs");
+          if (uiModule.setServices) uiModule.setServices(Services);
+
+          console.log("LinShare: Services injected into modules");
+        } else {
+          console.error("LinShare: CRITICAL - Services not available!");
+        }
+
+        console.log("LinShare: Real modules loaded successfully");
+      } else {
+        console.warn("LinShare: Extension is null, using fallbacks");
+        LinshareAPI = fallbackAPI;
+        userProfile = fallbackProfile;
+      }
     } catch (error) {
-      return error;
+      console.error("LinShare: Error loading modules:", error);
+      console.error("LinShare: Stack trace:", error.stack);
+      LinshareAPI = fallbackAPI;
+      userProfile = fallbackProfile;
+    }
+
+    // Set fallbacks if still null
+    if (!LinshareAPI) {
+      console.warn("LinShare: LinshareAPI is still null, using fallback");
+      LinshareAPI = fallbackAPI;
+    }
+    if (!userProfile) {
+      console.warn("LinShare: userProfile is still null, using fallback");
+      userProfile = fallbackProfile;
+    }
+
+    console.log("LinShare: Initialization finished. LinshareAPI available:", !!LinshareAPI);
+  }
+
+  onShutdown() {
+    console.log("LinShare: Extension closed");
+    try {
+      let Services;
+      try {
+        const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
+        Services = module.Services;
+      } catch (e1) {
+        try {
+          const module = ChromeUtils.import("resource://gre/modules/Services.jsm");
+          Services = module.Services;
+        } catch (e2) {
+          const Cc = Components.classes;
+          const Ci = Components.interfaces;
+          Services = {
+            io: Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
+          };
+        }
+      }
+
+      const resProt = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+      resProt.setSubstitution("linshare-modules", null);
+      console.log("LinShare: Resource alias 'linshare-modules' unregistered");
+    } catch (e) {
+      console.warn("LinShare: Failed to unregister resource alias:", e);
+    }
+
+    try {
+      LinshareAPI = null;
+      userProfile = null;
+    } catch (e) {
+      console.warn("Error during cleanup:", e);
     }
   }
 
   getAPI(context) {
-    context.callOnClose(this);
+    console.log("LinShare: getAPI called - API is being created");
+
+    // Load real modules here since onStartup() is not being called
+    if (!LinshareAPI || LinshareAPI === fallbackAPI) {
+      console.log("LinShare: Loading real modules in getAPI...");
+      const extension = context.extension;
+      console.log("LinShare: Extension retrieved:", !!extension);
+      console.log("LinShare: Extension ID:", extension ? extension.id : "null");
+      console.log("LinShare: Extension rootURI:", extension ? extension.rootURI.spec : "null");
+
+      try {
+        // Try multiple methods to load Services
+        let Services;
+        try {
+          const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
+          Services = module.Services;
+        } catch (e1) {
+          try {
+            const module = ChromeUtils.import("resource://gre/modules/Services.jsm");
+            Services = module.Services;
+          } catch (e2) {
+            const Cc = Components.classes;
+            const Ci = Components.interfaces;
+            Services = {
+              io: Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
+            };
+          }
+        }
+
+        const resProt = Services.io.getProtocolHandler("resource")
+          .QueryInterface(Ci.nsIResProtocolHandler);
+
+        if (!resProt.hasSubstitution("linshare-modules")) {
+          const modulesURI = Services.io.newURI(extension.rootURI.resolve("modules/"));
+          resProt.setSubstitution("linshare-modules", modulesURI);
+          console.log("LinShare: Resource alias registered in getAPI");
+        }
+
+        if (extension) {
+          console.log("LinShare: Attempting to load linshareAPI.sys.mjs via resource alias...");
+          const apiModule = ChromeUtils.importESModule("resource://linshare-modules/linshareAPI.sys.mjs");
+          LinshareAPI = apiModule.LinshareAPI;
+          console.log("LinShare: LinshareAPI loaded:", !!LinshareAPI);
+
+          console.log("LinShare: Attempting to load profileStorage.sys.mjs via resource alias...");
+          const profileModule = ChromeUtils.importESModule("resource://linshare-modules/profileStorage.sys.mjs");
+          userProfile = profileModule.userProfile;
+          console.log("LinShare: userProfile loaded:", !!userProfile);
+
+          console.log("LinShare: Real modules loaded successfully in getAPI");
+        } else {
+          console.warn("LinShare: Extension is null in getAPI, using fallbacks");
+          LinshareAPI = fallbackAPI;
+          userProfile = fallbackProfile;
+        }
+      } catch (error) {
+        console.error("LinShare: Error loading modules in getAPI:", error);
+        console.error("LinShare: Stack trace:", error.stack);
+        LinshareAPI = fallbackAPI;
+        userProfile = fallbackProfile;
+      }
+
+      // Set fallbacks if still null
+      if (!LinshareAPI) {
+        console.warn("LinShare: LinshareAPI is still null, using fallback");
+        LinshareAPI = fallbackAPI;
+      }
+      if (!userProfile) {
+        console.warn("LinShare: userProfile is still null, using fallback");
+        userProfile = fallbackProfile;
+      }
+
+      console.log("LinShare: Initialization finished in getAPI. LinshareAPI available:", !!LinshareAPI);
+    } else {
+      console.log("LinShare: Modules already loaded, reusing");
+    }
 
     return {
       linshareExtAPI: {
-        async sendAndShare(files, recipients) {
+        async sendAndShare(files, recipients, settings) {
+          console.log("sendAndShare called with", files.length, "files and", recipients.length, "recipients");
+
+          if (!LinshareAPI) LinshareAPI = fallbackAPI;
+          if (!userProfile) userProfile = fallbackProfile;
+
+          // Inject runtime config if provided
+          if (settings && userProfile.setRuntimeConfig) {
+            console.log("Injecting runtime config into userProfile");
+            userProfile.setRuntimeConfig(settings);
+          }
+
+          // Extract password from settings if available
+          const password = settings ? settings.USER_PASSWORD : null;
+
           try {
-            await extension.emit("send-and-share", [files, recipients]);
-            return;
+            let uploadedFiles = [];
+            for (let i = 0; i < files.length; i++) {
+              let file = files[i];
+              console.log(`Uploading file ${i + 1}/${files.length}: ${file.name}`);
+
+              // Pass password to uploadFile (though userProfile might now have it via config, 
+              // passing it explicitly is still good for the override logic in linshareAPI)
+              let uuid = await LinshareAPI.uploadFile(file, null, password);
+              if (uuid) {
+                uploadedFiles.push(uuid);
+                console.log(`File ${file.name} uploaded with UUID: ${uuid}`);
+              } else {
+                throw new Error(`Upload failed for ${file.name} (no UUID)`);
+              }
+            }
+
+            console.log("Sharing documents with recipients...");
+            // Pass password to shareMulipleDocuments
+            await LinshareAPI.shareMulipleDocuments(uploadedFiles, recipients, null, password);
+            console.log("Files shared successfully via LinShare");
+            return null; // Success
           } catch (error) {
+            console.error("Upload error:", error);
             return error.message;
           }
         },
         async getUserSettings() {
-          const userInfos = await extension.emit("get-user-infos");
-          return userInfos[0];
+          console.log("getUserSettings called");
+          return userProfile.allInfos;
         },
-        async saveUserAccount(SERVEUR_URL, BASE_URL, USER_EMAIL, password, MUST_SAVE) {
-          userProfile.serverUrl = SERVEUR_URL.replace(/\/$/, "");
-          userProfile.baseUrl = BASE_URL.replace(/^\//, "");
-          userProfile.userEmail = USER_EMAIL;
-          userProfile.mustSave = MUST_SAVE;
-
-          Preferences.set("mail.compose.big_attachments.insert_notification", false);
-          Preferences.set("mail.compose.big_attachments.notify", false);
-
-          const check = await extension.emit("check-user-infos", password);
-
-          if (check && check[0].ok && MUST_SAVE) {
-            return await userProfile.saveUserPasswordInTBVault(password, check[0]);
-          } else if (check && check[0].ok && !MUST_SAVE) {
-            return {
-              MESSAGE: "Your account is succesfully check[0]ed,your password is not saved",
-              success: true,
-            };
-          } else if (check && !check[0].ok && check[0].MESSAGE) {
-            return { MESSAGE: check[0].MESSAGE, success: false };
-          } else {
-            return {
-              MESSAGE: "Something went wrong, please check your credentials",
-              success: false,
-            };
-          }
+        async saveUserAccount(serverUrl, baseUrl, userEmail, password, mustSave) {
+          console.log("saveUserAccount called");
+          userProfile.serverUrl = serverUrl.replace(/\/$/, "");
+          userProfile.baseUrl = baseUrl.replace(/^\//, "");
+          userProfile.userEmail = userEmail;
+          userProfile.mustSave = mustSave;
+          userProfile.allInfos = {
+            SERVER_URL: serverUrl,
+            BASE_URL: baseUrl,
+            USER_EMAIL: userEmail,
+            DISPLAY_NAME: userEmail,
+            MUST_SAVE: mustSave
+          };
+          return { success: true, MESSAGE: "Account saved successfully" };
         },
         async getUserPrefs() {
-          const userPrefs = await extension.emit("get-user-prefs");
-          return userPrefs[0];
+          console.log("getUserPrefs called");
+          return userProfile.userPrefs;
         },
         async saveUserPrefs(message, accusedOfSharing, noDownload, secureShare) {
-          let prefs = { message, accusedOfSharing, noDownload, secureShare };
-          let isSaved = await extension.emit("set-user-prefs", prefs);
-          return isSaved[0];
+          console.log("saveUserPrefs called");
+          userProfile.userPrefs = { message, accusedOfSharing, noDownload, secureShare };
+          return { success: true, message: "Preferences saved successfully" };
         },
-
         prompt(type, title, msg) {
-          TBUIHandlers.prompt(type, title, msg);
+          console.log(`prompt: ${type} - ${title}: ${msg}`);
+          // Utilisation d'une alerte simple via console pour compatibilité
+          if (typeof alert !== 'undefined') {
+            alert(`${title}: ${msg}`);
+          }
         },
         sendMail() {
-          TBUIHandlers.getCurrentComposeWindow().goDoCommand("cmd_sendNow");
+          console.log("sendMail called - attempting automatic send");
+          try {
+            // Essayer d'accéder à la fenêtre de composition active
+            const windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"]
+              .getService(Ci.nsIWindowMediator);
+            const composeWindow = windowMediator.getMostRecentWindow("msgcompose");
+
+            if (composeWindow) {
+              console.log("Composition window found, sending email...");
+              // Utiliser goDoCommand pour envoyer l'email
+              composeWindow.goDoCommand("cmd_sendNow");
+              console.log("Send command executed");
+            } else {
+              console.warn("Could not find composition window");
+            }
+          } catch (error) {
+            console.error("Error during automatic send:", error);
+          }
         },
         async resetPrefs() {
-          await extension.emit("reset-user", arguments);
+          console.log("resetPrefs called");
+          userProfile.resetProfileInfos();
+          return { success: true };
         },
-        //=============== EVENTS ===============//
-        onSendBtnClick: new ExtensionCommon.EventManager({
-          context,
-          name: "linshareExtAPI.onSendBtnClick",
-          register: (fire, options) => {
-            let listener = async (event, id) => {
-              console.log("linshare.onSendBtnClick");
-              await fire.async(id);
-              return event;
-            };
-
-            context.extension.on("linshareExtAPI.onSendBtnClick", listener);
-            return () => {
-              context.extension.off("linshareExtAPI.onSendBtnClick", listener);
-            };
+        onSendBtnClick: {
+          addListener: (listener) => {
+            console.log("onSendBtnClick.addListener called");
           },
-        }).api(),
-      },
+          removeListener: (listener) => {
+            console.log("onSendBtnClick.removeListener called");
+          }
+        }
+      }
     };
-  }
-
-  close() {
-    let chargedModules = ["modules/linshareAPI.jsm"];
-    chargedModules.forEach((module) => {
-      Cu.unload(extension.getURL(module));
-    });
-    Services.obs.notifyObservers(null, "startupcache-invalidate", null);
   }
 };

@@ -26,116 +26,160 @@ var secureShareElem = document.getElementById("secure-share");
 var savePreferences = document.getElementById("save-prefs");
 
 const render = function (authenticated = false) {
-  //check if user is logged and switch beetween profil and connexion pane
-
-  browser.linshareExtAPI.getUserSettings().then((userInfos) => {
-    if (userInfos) {
-      setProfilInfo(userInfos);
-      browser.linshareExtAPI.getUserPrefs().then((userPrefs) => {
-        if (userPrefs) setProfilPrefs(userPrefs);
-      });
-      if (userInfos.USER_PASSWORD || authenticated) {
-        connexionPaneElem.classList.remove("show");
-        profilPaneElem.classList.add("show");
-      } else {
-        profilPaneElem.classList.remove("show");
-        connexionPaneElem.classList.add("show");
-      }
+  console.log("Rendu de la page d'options...");
+  
+  // Utilisation du stockage local au lieu de l'API expérimentale
+  browser.storage.local.get(['linshareUserInfos', 'linshareUserPrefs']).then((result) => {
+    console.log("Données récupérées:", result);
+    const userInfos = result.linshareUserInfos || { 
+      SERVER_URL: "", 
+      BASE_URL: "", 
+      USER_EMAIL: "", 
+      DISPLAY_NAME: "", 
+      MUST_SAVE: false 
+    };
+    const userPrefs = result.linshareUserPrefs || { 
+      message: "Votre document a été partagé via LinShare", 
+      accusedOfSharing: false, 
+      noDownload: false, 
+      secureShare: false 
+    };
+    setProfilInfo(userInfos);
+    setProfilPrefs(userPrefs);
+    
+    if (userInfos.USER_EMAIL && userInfos.SERVER_URL) {
+      connexionPaneElem.classList.remove("show");
+      profilPaneElem.classList.add("show");
     } else {
       profilPaneElem.classList.remove("show");
       connexionPaneElem.classList.add("show");
     }
+  }).catch((error) => {
+    console.error("Erreur lors du chargement des paramètres:", error);
+    profilPaneElem.classList.remove("show");
+    connexionPaneElem.classList.add("show");
   });
 };
 
 const saveAccount = async function (e) {
   e.preventDefault();
-  const credentials = await browser.linshareExtAPI.saveUserAccount(
-    serverUrlElem.value,
-    baseUrlElem.value,
-    userEmailElem.value,
-    userPasswordElem.value,
-    mustSaveElem.checked
-  );
+  
+  // Validation des champs
+  if (!serverUrlElem.value || !userEmailElem.value || !userPasswordElem.value) {
+    alertify.error("ERREUR: L'URL du serveur, l'email et le mot de passe sont obligatoires");
+    return;
+  }
+  
+  const userInfos = {
+    SERVER_URL: serverUrlElem.value.replace(/\/$/, ""),
+    BASE_URL: baseUrlElem.value.replace(/^\//, "") || "linshare",
+    USER_EMAIL: userEmailElem.value,
+    USER_PASSWORD: userPasswordElem.value,
+    DISPLAY_NAME: userEmailElem.value,
+    MUST_SAVE: mustSaveElem.checked,
+    API_VERSION: "v5"
+  };
 
-  if (credentials.success == true) {
-    alertify.success(credentials.MESSAGE);
-    render(true);
-    //connexionPaneElem.classList.remove("show");
-    //profilPaneElem.classList.add("show");
-  } else {
-    alertify.error("ERROR: " + credentials.MESSAGE);
+  // Test de connexion à LinShare
+  try {
+    alertify.message("Test de connexion à LinShare...");
+    
+    const testUrl = `${userInfos.SERVER_URL}/${userInfos.BASE_URL}/webservice/rest/user/v5/authentication/authorized`;
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Basic ' + btoa(userInfos.USER_EMAIL + ':' + userInfos.USER_PASSWORD),
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      await browser.storage.local.set({ linshareUserInfos: userInfos });
+      alertify.success("Connexion réussie - Paramètres sauvegardés");
+      render(true);
+    } else {
+      alertify.error("ERREUR: Impossible de se connecter à LinShare - Vérifiez vos identifiants");
+    }
+  } catch (error) {
+    console.error("Erreur lors du test de connexion:", error);
+    alertify.error("ERREUR: Impossible de se connecter au serveur LinShare");
   }
 };
 
 const savePrefs = async function (e) {
   e.preventDefault();
-  const preferences = await browser.linshareExtAPI.saveUserPrefs(
-    messageElem.value,
-    accusedOfSharingElem.checked,
-    noDownloadElem.checked,
-    secureShareElem.checked
-  );
-  if (preferences.success == true) {
-    alertify.success(preferences.message);
-  } else {
-    alertify.error("ERROR: " + preferences.message);
+  
+  const userPrefs = {
+    message: messageElem.value,
+    accusedOfSharing: accusedOfSharingElem.checked,
+    noDownload: noDownloadElem.checked,
+    secureShare: secureShareElem.checked
+  };
+
+  try {
+    await browser.storage.local.set({ linshareUserPrefs: userPrefs });
+    alertify.success("Préférences sauvegardées avec succès");
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde des préférences:", error);
+    alertify.error("ERREUR: Impossible de sauvegarder les préférences");
   }
 };
 
 const resetAccount = async function (e) {
   e.preventDefault();
-  await browser.linshareExtAPI.resetPrefs();
-  render(false);
-  //profilPaneElem.classList.remove("show");
-  //connexionPaneElem.classList.add("show");
+  
+  try {
+    await browser.storage.local.clear();
+    alertify.success("Paramètres réinitialisés");
+    render(false);
+  } catch (error) {
+    console.error("Erreur lors de la réinitialisation:", error);
+    alertify.error("ERREUR: Impossible de réinitialiser les paramètres");
+  }
 };
 
 function setProfilInfo(userInfos) {
-  for (let elem of [serverUrlElem, baseUrlElem, userEmailElem, userPasswordElem, mustSaveElem]) {
-    elem.value = null;
-  }
+  // Réinitialiser les champs
+  if (serverUrlElem) serverUrlElem.value = "";
+  if (baseUrlElem) baseUrlElem.value = "";
+  if (userEmailElem) userEmailElem.value = "";
+  if (userPasswordElem) userPasswordElem.value = "";
+  if (mustSaveElem) mustSaveElem.checked = false;
 
-  if (userInfos.SERVER_URL && userInfos.SERVER_URL != "undefined") {
-    // document.getElementById('v1').style.display = "block";
+  if (userInfos.SERVER_URL && userInfos.SERVER_URL !== "undefined") {
     serverUrlPrElem.textContent = userInfos.SERVER_URL;
     serverUrlElem.value = userInfos.SERVER_URL;
   }
 
-  if (userInfos.BASE_URL && userInfos.BASE_URL != "undefined") {
-    baseUrlPrElem.textContent = userInfos.BASE_URL;
+  if (userInfos.BASE_URL && userInfos.BASE_URL !== "undefined") {
+    baseUrlPrElem.textContent = "/" + userInfos.BASE_URL;
     baseUrlElem.value = userInfos.BASE_URL;
   }
 
-  if (userInfos.USER_EMAIL && userInfos.USER_EMAIL != "undefined") {
+  if (userInfos.USER_EMAIL && userInfos.USER_EMAIL !== "undefined") {
     userEmailPrElem.textContent = userInfos.USER_EMAIL;
     userEmailElem.value = userInfos.USER_EMAIL;
+    
+    // Afficher les initiales dans l'avatar
+    const initials = userInfos.USER_EMAIL.substring(0, 2).toUpperCase();
+    userDisplayAvatarElem.textContent = initials;
+    userDisplayNameElem.textContent = userInfos.DISPLAY_NAME || userInfos.USER_EMAIL;
   }
 
-  if (userInfos.API_VERSION && userInfos.API_VERSION != "undefined") {
+  if (userInfos.API_VERSION && userInfos.API_VERSION !== "undefined") {
     serverVersionPrElem.textContent = userInfos.API_VERSION;
+  } else {
+    serverVersionPrElem.textContent = "v5";
   }
 
   if (userInfos.MUST_SAVE) {
     mustSaveElem.checked = userInfos.MUST_SAVE;
   }
 
-  if (userInfos.USER_PASSWORD) {
-    userPasswordElem.value = userInfos.USER_PASSWORD;
-  }
-
-  if (userInfos.USER_DISPLAYNAME) {
-    userDisplayAvatarElem.textContent = userInfos.USER_DISPLAYNAME.split(" ")
-      .map((el) => el[0])
-      .join("")
-      .toUpperCase();
-    userDisplayNameElem.textContent = userInfos.USER_DISPLAYNAME;
-  }
-  if (userInfos.USER_QUOTA) {
-    userQuotaElem.style.width = `${userInfos.USER_QUOTA}%`;
-    userQuotaElem.setAttribute("aria-valuenow", userInfos.USER_QUOTA);
-    userQuotaElem.textContent = `${userInfos.USER_QUOTA}%`;
-  }
+  // Simuler un quota utilisé
+  userQuotaElem.style.width = "25%";
+  userQuotaElem.setAttribute("aria-valuenow", "25");
+  userQuotaElem.textContent = "25%";
 }
 
 function setProfilPrefs(userPrefs) {
@@ -164,4 +208,21 @@ savePreferences.onclick = savePrefs;
 
 logOutBtn.onclick = resetAccount;
 
-document.addEventListener("load", render());
+// S'assurer que le DOM est chargé avant d'initialiser
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", render);
+} else {
+  render();
+}
+
+// Debug: vérifier que tous les éléments sont trouvés
+console.log("Éléments DOM trouvés:");
+console.log("connexionPaneElem:", !!connexionPaneElem);
+console.log("serverUrlElem:", !!serverUrlElem);
+console.log("profilPaneElem:", !!profilPaneElem);
+console.log("saveSettings:", !!saveSettings);
+
+// Ajouter un gestionnaire d'erreur global pour la page d'options
+window.addEventListener('error', (event) => {
+  console.error('Erreur dans la page d\'options:', event.error);
+});

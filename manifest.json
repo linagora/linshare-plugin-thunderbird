@@ -1,28 +1,27 @@
 {
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "linshare@linagora",
-      "strict_min_version": "68.0"
+      "strict_min_version": "115.0"
     }
   },
   "background": {
-    "scripts": ["background.js"]
-  },
-  "experiment_apis": {
-    "linshareExtAPI": {
-      "schema": "schema.json",
-      "parent": {
-        "scopes": ["addon_parent"],
-        "paths": [["linshareExtAPI"]],
-        "script": "linshare.js",
-        "events": ["startup"]
-      }
-    }
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
   },
   "default_locale": "fr",
-
   "browser_action": {
     "default_title": "__MSG_extensionName__",
+    "default_icon": "assets/linshare.png"
+  },
+  "options_ui": {
+    "page": "content/views/options/options.html",
+    "open_in_tab": true
+  },
+  "compose_action": {
+    "default_title": "Envoyer via LinShare",
     "default_icon": "assets/linshare.png"
   },
   "author": "Linagora",
@@ -35,7 +34,29 @@
     "32": "assets/linshare.png"
   },
   "manifest_version": 2,
-  "permissions": ["storage", "compose", "tabs"],
+  "permissions": [
+    "storage",
+    "compose",
+    "tabs",
+    "activeTab",
+    "notifications"
+  ],
   "name": "__MSG_extensionName__",
-  "version": "2.0.3-SNAPSHOT"
+  "version": "3.0.0",
+  "experiment_apis": {
+    "linshareExtAPI": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "paths": [
+          [
+            "linshareExtAPI"
+          ]
+        ],
+        "script": "linshare.js"
+      }
+    }
+  }
 }
