@@ -125,7 +125,6 @@ async function sendToLinshare(tab) {
     }
 
     return result; // Error message
-    return { success: false, error: result }; // Error message
   } else {
     console.error("browser.linshareExtAPI is undefined");
     throw new Error("LinShare API not available");

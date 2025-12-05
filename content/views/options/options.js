@@ -25,28 +25,48 @@ var noDownloadElem = document.getElementById("no-download");
 var secureShareElem = document.getElementById("secure-share");
 var savePreferences = document.getElementById("save-prefs");
 
+var authTypeElem = document.getElementById("in-auth-type");
+var jwtTokenElem = document.getElementById("in-jwt-token");
+var passwordGroup = document.getElementById("password-group");
+var jwtGroup = document.getElementById("jwt-group");
+
+// Handle auth type change
+if (authTypeElem) {
+  authTypeElem.addEventListener("change", function () {
+    if (this.value === "jwt") {
+      passwordGroup.style.display = "none";
+      jwtGroup.style.display = "flex";
+    } else {
+      passwordGroup.style.display = "flex";
+      jwtGroup.style.display = "none";
+    }
+  });
+}
+
 const render = function (authenticated = false) {
   console.log("Rendu de la page d'options...");
-  
+
   // Utilisation du stockage local au lieu de l'API expérimentale
   browser.storage.local.get(['linshareUserInfos', 'linshareUserPrefs']).then((result) => {
     console.log("Données récupérées:", result);
-    const userInfos = result.linshareUserInfos || { 
-      SERVER_URL: "", 
-      BASE_URL: "", 
-      USER_EMAIL: "", 
-      DISPLAY_NAME: "", 
-      MUST_SAVE: false 
+    const userInfos = result.linshareUserInfos || {
+      SERVER_URL: "",
+      BASE_URL: "",
+      USER_EMAIL: "",
+      DISPLAY_NAME: "",
+      MUST_SAVE: false,
+      AUTH_TYPE: "basic",
+      JWT_TOKEN: ""
     };
-    const userPrefs = result.linshareUserPrefs || { 
-      message: "Votre document a été partagé via LinShare", 
-      accusedOfSharing: false, 
-      noDownload: false, 
-      secureShare: false 
+    const userPrefs = result.linshareUserPrefs || {
+      message: "Votre document a été partagé via LinShare",
+      accusedOfSharing: false,
+      noDownload: false,
+      secureShare: false
     };
     setProfilInfo(userInfos);
     setProfilPrefs(userPrefs);
-    
+
     if (userInfos.USER_EMAIL && userInfos.SERVER_URL) {
       connexionPaneElem.classList.remove("show");
       profilPaneElem.classList.add("show");
@@ -63,18 +83,32 @@ const render = function (authenticated = false) {
 
 const saveAccount = async function (e) {
   e.preventDefault();
-  
+
+  const authType = authTypeElem ? authTypeElem.value : "basic";
+
   // Validation des champs
-  if (!serverUrlElem.value || !userEmailElem.value || !userPasswordElem.value) {
-    alertify.error("ERREUR: L'URL du serveur, l'email et le mot de passe sont obligatoires");
+  if (!serverUrlElem.value || !userEmailElem.value) {
+    alertify.error("ERREUR: L'URL du serveur et l'email sont obligatoires");
     return;
   }
-  
+
+  if (authType === "basic" && !userPasswordElem.value) {
+    alertify.error("ERREUR: Le mot de passe est obligatoire pour l'authentification Basic");
+    return;
+  }
+
+  if (authType === "jwt" && !jwtTokenElem.value) {
+    alertify.error("ERREUR: Le token JWT est obligatoire pour l'authentification JWT");
+    return;
+  }
+
   const userInfos = {
     SERVER_URL: serverUrlElem.value.replace(/\/$/, ""),
     BASE_URL: baseUrlElem.value.replace(/^\//, "") || "linshare",
     USER_EMAIL: userEmailElem.value,
     USER_PASSWORD: userPasswordElem.value,
+    JWT_TOKEN: jwtTokenElem.value,
+    AUTH_TYPE: authType,
     DISPLAY_NAME: userEmailElem.value,
     MUST_SAVE: mustSaveElem.checked,
     API_VERSION: "v5"
@@ -83,16 +117,24 @@ const saveAccount = async function (e) {
   // Test de connexion à LinShare
   try {
     alertify.message("Test de connexion à LinShare...");
-    
+
     const testUrl = `${userInfos.SERVER_URL}/${userInfos.BASE_URL}/webservice/rest/user/v5/authentication/authorized`;
+
+    let headers = {
+      'Accept': 'application/json'
+    };
+
+    if (authType === "jwt") {
+      headers['Authorization'] = 'Bearer ' + userInfos.JWT_TOKEN;
+    } else {
+      headers['Authorization'] = 'Basic ' + btoa(userInfos.USER_EMAIL + ':' + userInfos.USER_PASSWORD);
+    }
+
     const response = await fetch(testUrl, {
       method: 'GET',
-      headers: {
-        'Authorization': 'Basic ' + btoa(userInfos.USER_EMAIL + ':' + userInfos.USER_PASSWORD),
-        'Accept': 'application/json'
-      }
+      headers: headers
     });
-    
+
     if (response.ok) {
       await browser.storage.local.set({ linshareUserInfos: userInfos });
       alertify.success("Connexion réussie - Paramètres sauvegardés");
@@ -108,7 +150,7 @@ const saveAccount = async function (e) {
 
 const savePrefs = async function (e) {
   e.preventDefault();
-  
+
   const userPrefs = {
     message: messageElem.value,
     accusedOfSharing: accusedOfSharingElem.checked,
@@ -127,7 +169,7 @@ const savePrefs = async function (e) {
 
 const resetAccount = async function (e) {
   e.preventDefault();
-  
+
   try {
     await browser.storage.local.clear();
     alertify.success("Paramètres réinitialisés");
@@ -144,7 +186,24 @@ function setProfilInfo(userInfos) {
   if (baseUrlElem) baseUrlElem.value = "";
   if (userEmailElem) userEmailElem.value = "";
   if (userPasswordElem) userPasswordElem.value = "";
+  if (jwtTokenElem) jwtTokenElem.value = "";
   if (mustSaveElem) mustSaveElem.checked = false;
+
+  if (userInfos.AUTH_TYPE) {
+    if (authTypeElem) {
+      authTypeElem.value = userInfos.AUTH_TYPE;
+      // Trigger change event to update UI visibility
+      authTypeElem.dispatchEvent(new Event('change'));
+    }
+  }
+
+  if (userInfos.JWT_TOKEN && jwtTokenElem) {
+    jwtTokenElem.value = userInfos.JWT_TOKEN;
+  }
+
+  if (userInfos.USER_PASSWORD && userPasswordElem) {
+    userPasswordElem.value = userInfos.USER_PASSWORD;
+  }
 
   if (userInfos.SERVER_URL && userInfos.SERVER_URL !== "undefined") {
     serverUrlPrElem.textContent = userInfos.SERVER_URL;
@@ -159,7 +218,7 @@ function setProfilInfo(userInfos) {
   if (userInfos.USER_EMAIL && userInfos.USER_EMAIL !== "undefined") {
     userEmailPrElem.textContent = userInfos.USER_EMAIL;
     userEmailElem.value = userInfos.USER_EMAIL;
-    
+
     // Afficher les initiales dans l'avatar
     const initials = userInfos.USER_EMAIL.substring(0, 2).toUpperCase();
     userDisplayAvatarElem.textContent = initials;

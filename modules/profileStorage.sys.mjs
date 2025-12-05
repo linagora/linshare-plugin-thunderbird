@@ -41,6 +41,8 @@ export const userProfile = {
       USER_EMAIL: this.userEmail,
       API_VERSION: this.apiVersion,
       BASE_URL: this.baseUrl,
+      AUTH_TYPE: this.authType,
+      JWT_TOKEN: this.jwtToken,
     };
   },
 
@@ -76,6 +78,12 @@ export const userProfile = {
 
   get mustSave() { return this._runtimeConfig?.MUST_SAVE || Preferences.get("linshare.MUST_SAVE") || false; },
   set mustSave(save) { Preferences.set("linshare.MUST_SAVE", save); },
+
+  get authType() { return this._runtimeConfig?.AUTH_TYPE || Preferences.get("linshare.AUTH_TYPE") || "basic"; },
+  set authType(type) { Preferences.set("linshare.AUTH_TYPE", type); },
+
+  get jwtToken() { return this._runtimeConfig?.JWT_TOKEN || Preferences.get("linshare.JWT_TOKEN") || null; },
+  set jwtToken(token) { Preferences.set("linshare.JWT_TOKEN", token); },
 
   get displayName() { return Preferences.get("linshare.USER_DISPLAYNAME") || ""; },
   set displayName(displayName) { Preferences.set("linshare.USER_DISPLAYNAME", displayName); },

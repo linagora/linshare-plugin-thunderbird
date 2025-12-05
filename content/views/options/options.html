@@ -1,273 +1,211 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="../../../skin/reset.css" />
-    <link rel="stylesheet" href="../../../skin/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="../../../skin/css/alertify.min.css" />
-    <link rel="stylesheet" href="options.css" />
-    <script src="../../../skin/js/alertify.min.js"></script>
-    <script src="../../../skin/js/jquery-3.5.1.slim.min.js"></script>
-    <script src="../../../skin/js/bootstrap.min.js"></script>
-    <script src="options.js" defer></script>
-    <title>Linshare Settings</title>
-  </head>
 
-  <body style="background-color: #05b1ff; height: 100%">
-    <div class="container-pane">
-      <!-- libre logo-->
-      <div style="display: flex; line-height: 25px">
-        <img
-          src="../../../assets/libre.png"
-          alt="logo linshare"
-          width="14px"
-          height="14px"
-          class="m-1"
-        />
-        <p
-          class="text-white font-weight-bold font-italic"
-          style="font-size: 14px; font-family: Lato, sans-serif"
-        >
-          Libre & Free
-        </p>
-      </div>
-      <!-- linshare picture -->
-      <div class="d-flex flex-column">
-        <img src="../../../assets/ls-logo-big.png" alt="linshare logo" class="mt-3 mx-auto d-block" />
-        <p class="text-white mx-auto d-block font-weight-bold" style="font-family: roboto, sans-serif">
-          Secure file sharing app in open source
-        </p>
-      </div>
-      <!-- connexion settings -->
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../../../skin/reset.css" />
+  <link rel="stylesheet" href="../../../skin/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../../../skin/css/alertify.min.css" />
+  <link rel="stylesheet" href="options.css" />
+  <script src="../../../skin/js/alertify.min.js"></script>
+  <script src="../../../skin/js/jquery-3.5.1.slim.min.js"></script>
+  <script src="../../../skin/js/bootstrap.min.js"></script>
+  <script src="options.js" defer></script>
+  <title>Linshare Settings</title>
+</head>
 
-      <div id="connexion" class="container pane">
-        <div class="row">
-          <div class="col-sm-10 col-md-8 col-lg-6 mx-auto d-table h-100">
-            <div class="d-table-cell align-middle">
-              <div class="card cs-rounded-top my-4">
-                <div class="card-header text-center text-secondary">
-                  <span class="cs-title">Connexion</span>
-                </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-lg-8 px-1">
-                      <div class="form-group">
-                        <label class="text-muted mb-1">Server URL</label>
-                        <input
-                          id="in-server-url"
-                          class="form-control form-control-md"
-                          type="text"
-                          name="name"
-                          placeholder="Enter your linshare server URL"
-                        />
-                      </div>
-                    </div>
-                    <div class="col-lg-4 px-1">
-                      <div class="form-group">
-                        <label class="text-muted mb-1">Base URL</label>
-                        <input
-                          id="in-base-url"
-                          class="form-control form-control-md"
-                          type="text"
-                          name="company"
-                          placeholder="Enter your base URL"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="form-group px-1 w-100">
-                      <label class="text-muted mb-1">Email</label>
-                      <input
-                        id="in-user-email"
-                        class="form-control form-control-md"
-                        type="email"
-                        name="email"
-                        placeholder="Enter your email"
-                      />
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="form-group px-1 w-100">
-                      <label class="text-muted mb-1">Password</label>
-                      <input
-                        id="in-user-password"
-                        class="form-control form-control-md"
-                        type="password"
-                        name="password"
-                        placeholder="Enter password"
-                      />
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="custom-control custom-checkbox mx-2 w-100">
-                      <input type="checkbox" class="custom-control-input" id="in-remember-me" />
-                      <label class="custom-control-label" for="in-remember-me">Remember me!</label>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <!-- <a href="index.html" class="btn btn-lg btn-primary">Sign up</a> -->
-                    <button id="save-settings" type="submit" class="btn btn-primary">
-                      Check & Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+<body>
+  <div class="container-pane">
+    <!-- Header with LinShare Logo -->
+    <div class="header-logo">
+      <div class="libre-badge">
+        <img src="../../../assets/libre.png" alt="libre icon" />
+        <span>Libre & Free</span>
       </div>
-
-      <!-- Profil show only when user creds are checked -->
-      <div id="profile" class="pane">
-        <div class="container">
-          <div class="row justify-content-md-center">
-            <div class="col-lg-4">
-              <div class="profile-card-4">
-                <div class="card">
-                  <div class="card-body text-center bg-primary rounded-top mb-4">
-                    <div class="user-box">
-                      <div id="user-display-avatar" class="avatar"></div>
-                    </div>
-                    <h5 id="user-display-name" class="mb-1 text-white"></h5>
-                  </div>
-                  <div class="card-body">
-                    <ul class="mb-4 list-group shadow-none">
-                      <li class="list-group-item">
-                        <div class="list-icon">
-                          <i class="fa fa-phone-square"></i>
-                        </div>
-                        <div class="list-details">
-                          <span id="linshare-server-url">https://linshare.fr</span>
-                          <small>Server URL</small>
-                        </div>
-                      </li>
-                      <li class="list-group-item">
-                        <div class="list-icon">
-                          <i class="fa fa-envelope"></i>
-                        </div>
-                        <div class="list-details">
-                          <span id="linshare-base-url">/linshare</span>
-                          <small>Base URL</small>
-                        </div>
-                      </li>
-                      <li class="list-group-item">
-                        <div class="list-icon">
-                          <i class="fa fa-envelope"></i>
-                        </div>
-                        <div class="list-details">
-                          <span id="linshare-user-email">user@example.com</span>
-                          <small>Email Address</small>
-                        </div>
-                      </li>
-                      <li class="list-group-item">
-                        <div class="list-icon">
-                          <i class="fa fa-globe"></i>
-                        </div>
-                        <div class="list-details">
-                          <span id="linshare-server-version">4.0</span>
-                          <small>Version</small>
-                        </div>
-                      </li>
-                    </ul>
-                    <div class="mb-0 user-quota">
-                      <small class="mb-0">Espace utilisé</small>
-                      <div class="progress">
-                        <div
-                          id="user-quota"
-                          class="progress-bar progress-bar-striped"
-                          role="progressbar"
-                          aria-valuenow="0"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="card-footer text-center">
-                    <!-- <button type="button" class="btn btn-primary">Log In</button> -->
-                    <button type="button" id="log-out-btn" class="btn btn-warning btn-block">
-                      Reset
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-8 mb-4">
-              <div class="card h-100">
-                <div class="card-body">
-                  <div class="row justify-content-start">
-                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                      <div class="form-group">
-                        <label for="fullName">Message</label>
-                        <textarea id="message" class="form-control cs-min-h-1"></textarea>
-                      </div>
-                      <h6 class="mb-0">Preferences</h6>
-                      <hr class="mt-1" />
-                      <div class="custom-control custom-checkbox mx-2 my-2 w-100">
-                        <input
-                          type="checkbox"
-                          class="custom-control-input"
-                          id="accused-of-sharing"
-                          checked=""
-                        />
-                        <label class="custom-control-label" for="accused-of-sharing"
-                          >Recevoir un accusé de partage</label
-                        >
-                      </div>
-                      <div class="custom-control custom-checkbox mx-2 my-2 w-100">
-                        <input
-                          type="checkbox"
-                          class="custom-control-input"
-                          id="no-download"
-                          checked=""
-                        />
-                        <label class="custom-control-label" for="no-download"
-                          >Recevoir un accusé de non-téléchargement</label
-                        >
-                      </div>
-                      <div class="custom-control custom-checkbox mx-2 my-2 w-100">
-                        <input
-                          type="checkbox"
-                          class="custom-control-input"
-                          id="secure-share"
-                          checked=""
-                        />
-                        <label class="custom-control-label" for="secure-share"
-                          >Sécuriser le partage</label
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer text-muted">
-                  <div class="row">
-                    <div class="col">
-                      <div class="text-right">
-                        <button type="button" id="save-prefs" name="update" class="btn btn-primary">
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="logo-main">
+        <img src="../../../assets/ls-logo-big.png" alt="LinShare logo" />
+        <h1 class="logo-text">LinShare</h1>
       </div>
-      <footer>
-        <p
-          class="text-white text-center position-sticky mt-2"
-          style="font-family: roboto, sans-serif; font-size: 11px; width: 100%; bottom: 0px"
-        >
-          You are using the Open Source and free version of LinShare™, powered by Linagora © 2009–2019.
-          Contribute to LinShare R&D by subscribing to an Enterprise offer.
-        </p>
-      </footer>
+      <p class="tagline">Secure file sharing app in open source</p>
     </div>
-  </body>
+
+    <!-- Connection Form -->
+    <div id="connexion" class="pane">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="cs-title">Connexion</h2>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-lg-8">
+              <div class="form-group">
+                <label>Server URL</label>
+                <input id="in-server-url" class="form-control" type="text"
+                  placeholder="Enter your linshare server URL" />
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="form-group">
+                <label>Base URL</label>
+                <input id="in-base-url" class="form-control" type="text" placeholder="Enter your base URL" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input id="in-user-email" class="form-control" type="email" placeholder="Enter your email" />
+          </div>
+
+          <div class="form-group">
+            <label>Authentication Type</label>
+            <select id="in-auth-type" class="form-control">
+              <option value="basic">Basic Authentication (User/Password)</option>
+              <option value="jwt">JWT Token</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="password-group">
+            <label>Password</label>
+            <input id="in-user-password" class="form-control" type="password" placeholder="Enter password" />
+          </div>
+
+          <div class="form-group" id="jwt-group" style="display: none;">
+            <label>JWT Token</label>
+            <input id="in-jwt-token" class="form-control" type="text" placeholder="Enter your JWT token" />
+          </div>
+
+          <div class="custom-control">
+            <input type="checkbox" class="custom-control-input" id="in-remember-me" />
+            <label class="custom-control-label" for="in-remember-me">Remember me!</label>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button id="save-settings" type="submit" class="btn-primary">Check & Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profil show only when user creds are checked -->
+    <div id="profile" class="pane">
+      <div class="container">
+        <div class="row justify-content-md-center">
+          <div class="col-lg-4">
+            <div class="profile-card-4">
+              <div class="card h-100">
+                <div class="card-body text-center bg-primary rounded-top mb-4">
+                  <div class="user-box">
+                    <div id="user-display-avatar" class="avatar"></div>
+                  </div>
+                  <h5 id="user-display-name" class="mb-1 text-white"></h5>
+                </div>
+                <div class="card-body">
+                  <ul class="mb-4 list-group shadow-none">
+                    <li class="list-group-item">
+                      <div class="list-icon">
+                        <i class="fa fa-phone-square"></i>
+                      </div>
+                      <div class="list-details">
+                        <small>Server URL</small>
+                        <span id="linshare-server-url">https://linshare.fr</span>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="list-icon">
+                        <i class="fa fa-envelope"></i>
+                      </div>
+                      <div class="list-details">
+                        <small>Base URL</small>
+                        <span id="linshare-base-url">/linshare</span>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="list-icon">
+                        <i class="fa fa-envelope"></i>
+                      </div>
+                      <div class="list-details">
+                        <small>Email Address</small>
+                        <span id="linshare-user-email">user@example.com</span>
+                      </div>
+                    </li>
+                    <li class="list-group-item">
+                      <div class="list-icon">
+                        <i class="fa fa-globe"></i>
+                      </div>
+                      <div class="list-details">
+                        <small>Version</small>
+                        <span id="linshare-server-version">4.0</span>
+                      </div>
+                    </li>
+                  </ul>
+                  <div class="mb-0 user-quota">
+                    <small class="mb-0">Espace utilisé</small>
+                    <div class="progress">
+                      <div id="user-quota" class="progress-bar progress-bar-striped" role="progressbar"
+                        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer text-center">
+                  <!-- <button type="button" class="btn btn-primary">Log In</button> -->
+                  <button type="button" id="log-out-btn" class="btn btn-warning btn-block">
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="row justify-content-start">
+                  <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                    <div class="form-group">
+                      <label for="fullName">Message</label>
+                      <textarea id="message" class="form-control cs-min-h-1"></textarea>
+                    </div>
+                    <h6 class="mb-0">Preferences</h6>
+                    <hr class="mt-1" />
+                    <div class="custom-control custom-checkbox mx-2 my-2 w-100">
+                      <input type="checkbox" class="custom-control-input" id="accused-of-sharing" checked="" />
+                      <label class="custom-control-label" for="accused-of-sharing">Receive a sharing receipt</label>
+                    </div>
+                    <div class="custom-control custom-checkbox mx-2 my-2 w-100">
+                      <input type="checkbox" class="custom-control-input" id="no-download" checked="" />
+                      <label class="custom-control-label" for="no-download">Receive a non-download receipt</label>
+                    </div>
+                    <div class="custom-control custom-checkbox mx-2 my-2 w-100">
+                      <input type="checkbox" class="custom-control-input" id="secure-share" checked="" />
+                      <label class="custom-control-label" for="secure-share">Secure the sharing</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer text-muted">
+                <div class="row">
+                  <div class="col">
+                    <div class="text-right">
+                      <button type="button" id="save-prefs" name="update" class="btn btn-primary">
+                        Update
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <p class="text-white text-center position-sticky mt-2"
+        style="font-family: roboto, sans-serif; font-size: 11px; width: 100%; bottom: 0px">
+        You are using the Open Source and free version of LinShare™, powered by Linagora © 2009–2019.
+        Contribute to LinShare R&D by subscribing to an Enterprise offer.
+      </p>
+    </footer>
+  </div>
+</body>
+
 </html>

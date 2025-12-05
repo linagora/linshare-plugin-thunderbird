@@ -94,7 +94,11 @@ export const LinshareAPI = {
     console.log("LinshareAPI.uploadFile called with file:", file.name);
     let password = passwordOverride;
 
-    if (!password) {
+    // Check auth type from profile
+    const authType = userProfile.authType;
+    console.log("Auth Type:", authType);
+
+    if (authType === "basic" && !password) {
       try {
         console.log("Getting user password from profile...");
         password = await userProfile.getUserPassword();
@@ -102,8 +106,13 @@ export const LinshareAPI = {
         console.error("Error getting password:", error);
         throw error;
       }
+    } else if (authType === "jwt") {
+      console.log("Using JWT Auth");
+      // Password not needed for JWT, but we pass null or empty string to getRequestContext
+      // The token is retrieved from userProfile inside getRequestContext
+      password = "";
     } else {
-      console.log("Using provided password override");
+      console.log("Using provided password override or non-basic auth");
     }
 
     console.log("Building request context...");
@@ -128,11 +137,10 @@ export const LinshareAPI = {
       headers.append("Accept", "application/json");
     }
 
-    let progressElem = null;
+    // Pass progress callback to _fetch if provided
+    let progressCallback = null;
     if (uploadProgress && typeof uploadProgress === 'function') {
-      try {
-        progressElem = uploadProgress();
-      } catch (e) { }
+      progressCallback = uploadProgress;
     }
 
     console.log("Sending upload request...");
@@ -143,21 +151,16 @@ export const LinshareAPI = {
         headers,
         body: formData,
       },
-      progressElem
+      progressCallback
     );
 
     console.log("Upload response status:", response.status);
     let uuid;
     if (response.status === 200) {
-      if (progressElem) {
-        try { progressElem.querySelector(".progress-bar").classList.add("bg-success"); } catch (e) { }
-      }
       uuid = LinshareUtils.handleResponse(response, "uuid");
       console.log("Upload successful, UUID:", uuid);
     } else if (response.status === 401) {
       console.log("Authentication failed, retrying...");
-      // If password was overridden, retrying with same password might not help unless it was a glitch
-      // But we can try checkCredentials
       let check = await this.checkCredentials(password);
       if (check.ok) {
         return await this.uploadFile(file, uploadProgress, password);
@@ -170,9 +173,6 @@ export const LinshareAPI = {
       }
     } else {
       console.error("Upload failed with status:", response.status);
-      if (progressElem) {
-        try { progressElem.querySelector(".progress-bar").classList.add("bg-danger"); } catch (e) { }
-      }
       uuid = await LinshareUtils.handleError(response);
     }
     console.log("Returning UUID:", uuid);
@@ -180,12 +180,18 @@ export const LinshareAPI = {
   },
   async shareMulipleDocuments(attachementsUuids, recipients, pathv2 = null, passwordOverride) {
     let password = passwordOverride;
-    if (!password) {
+
+    // Check auth type from profile
+    const authType = userProfile.authType;
+
+    if (authType === "basic" && !password) {
       try {
         password = await userProfile.getUserPassword();
       } catch (error) {
         throw error;
       }
+    } else if (authType === "jwt") {
+      password = "";
     }
     let { headers, url, ctype } = LinshareUtils.getRequestContext(
       ROUTES,

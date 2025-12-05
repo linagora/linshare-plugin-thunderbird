@@ -8,11 +8,18 @@ const { TBUIHandlers } = ChromeUtils.importESModule("resource://linshare-modules
 
 export const LinshareUtils = {
   getRequestContext(ROUTES, endpoint, USER_INFOS, password, apiVersion = null) {
-    let { SERVER_URL, USER_EMAIL, API_VERSION, BASE_URL } = USER_INFOS;
+    let { SERVER_URL, USER_EMAIL, API_VERSION, BASE_URL, AUTH_TYPE, JWT_TOKEN } = USER_INFOS;
     if (apiVersion) API_VERSION = apiVersion;
     let ctype = this.getCType(ROUTES, endpoint, API_VERSION);
     let url = this.buildVersionUrl(ROUTES, endpoint, SERVER_URL, API_VERSION, BASE_URL);
-    let authorization = btoa(`${USER_EMAIL}:${password}`);
+
+    let authorization;
+    if (AUTH_TYPE === "jwt" && JWT_TOKEN) {
+      authorization = `Bearer ${JWT_TOKEN}`;
+    } else {
+      authorization = `Basic ${btoa(`${USER_EMAIL}:${password}`)}`;
+    }
+
     let headers = this.buidRequestHeaders(authorization, ctype, SERVER_URL);
     return { headers, url, ctype };
   },
@@ -51,7 +58,7 @@ export const LinshareUtils = {
   },
   buidRequestHeaders(authorization, ctype, serverUrl) {
     let headers = new Headers({
-      Authorization: `Basic ${authorization}`,
+      Authorization: authorization,
       redirect: "error",
       "Content-Type": ctype,
       Connection: "close",
@@ -109,22 +116,47 @@ export const LinshareUtils = {
     }
   },
   async handleError(err) {
-    switch (err.status) {
-      case 420:
-        Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", "The account quota has been reached.");
-        throw new Error("The account quota has been reached.");
-      case 451:
-        Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", "File contains virus");
-      default:
-        if (JSON.parse(err.body).message) {
-          Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", JSON.parse(err.body).message);
-          if ((JSON.parse(err.body).errCode = "46011")) {
-            throw new Error(JSON.parse(err.body).message);
-          }
-        } else {
-          Services.prompt.alert(TBUIHandlers.getCurrentComposeWindow(), "Error", "Uploading failed");
-        }
+    let errorMessage = "Upload failed";
+
+    // Handle timeout errors
+    if (err.status === 504) {
+      errorMessage = "Upload timeout - the server took too long to respond. Please try with a smaller file or check your connection.";
+      console.error(errorMessage);
+      throw new Error(errorMessage);
     }
+
+    // Handle other HTTP errors
+    if (err.status === 420) {
+      errorMessage = "The account quota has been reached.";
+      console.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    if (err.status === 451) {
+      errorMessage = "File contains virus";
+      console.error(errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Try to parse JSON error message
+    try {
+      if (err.body && typeof err.body === 'string') {
+        const errorData = JSON.parse(err.body);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+          if (errorData.errCode === "46011") {
+            throw new Error(errorMessage);
+          }
+        }
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, use a generic message
+      console.error("Failed to parse error response:", parseError);
+      errorMessage = `Upload failed with status ${err.status}`;
+    }
+
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   },
   _fetch(url, opts = {}, progressElem = null) {
     return new Promise((res, rej) => {
@@ -142,29 +174,12 @@ export const LinshareUtils = {
           headers: this.makeResponseHeaders(e.target.getAllResponseHeaders()),
           status: e.target.status,
         });
-      if (progressElem) {
-        TBUIHandlers.getCurrentComposeWindow().onclose = function (e) {
-          e.stopPropagation();
-          let confirm = Services.prompt.confirm(
-            null,
-            "Abort uploading",
-            "Uploading to linshare is in process, do you want to stop it"
-          );
-          if (confirm) {
-            xhr.abort();
-          } else {
-            e.preventDefault();
-          }
+      xhr.onerror = rej;
+      if (xhr.upload && progressElem && typeof progressElem === 'function') {
+        xhr.upload.onprogress = function ({ loaded, total }) {
+          progressElem(loaded, total);
         };
       }
-      xhr.onerror = rej;
-      if (xhr.upload && progressElem instanceof Element)
-        xhr.upload.onprogress = function ({ loaded: l, total: t }) {
-          let percent = `${Math.round((l / t) * 100)}%`;
-          let progressbar = progressElem.querySelector("[aria-valuenow]");
-          progressbar.style.width = percent;
-          progressbar.textContent = percent;
-        };
       if (opts.body) {
         let body = opts.body;
         xhr.send(body);
