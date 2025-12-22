@@ -57,5 +57,5 @@ build:
     expire_in: 1 week
   script:
     - apt update
-    - apt install zip
+    - apt install -y zip
     - mvn clean package
