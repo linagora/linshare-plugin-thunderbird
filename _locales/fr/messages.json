@@ -5,7 +5,193 @@
     "extensionName": {
         "message": "LinShare"
     },
-    "shareButton":{
+    "shareButton": {
         "message": "Partager&Envoyer"
+    },
+    "optionsTitle": {
+        "message": "Paramètres LinShare"
+    },
+    "libreBadge": {
+        "message": "Libre & Gratuit"
+    },
+    "tagline": {
+        "message": "Solution de partage de fichiers sécurisée en open source"
+    },
+    "connexionHeader": {
+        "message": "Connexion"
+    },
+    "serverUrlLabel": {
+        "message": "URL du serveur"
+    },
+    "serverUrlPlaceholder": {
+        "message": "Saisissez l'URL de votre serveur LinShare"
+    },
+    "baseUrlLabel": {
+        "message": "URL de base"
+    },
+    "baseUrlPlaceholder": {
+        "message": "Saisissez votre URL de base"
+    },
+    "emailLabel": {
+        "message": "Email"
+    },
+    "emailPlaceholder": {
+        "message": "Saisissez votre email"
+    },
+    "authTypeLabel": {
+        "message": "Type d'authentification"
+    },
+    "authTypeBasic": {
+        "message": "Authentification Basic (Utilisateur/Mot de passe)"
+    },
+    "authTypeJwt": {
+        "message": "Token JWT"
+    },
+    "passwordLabel": {
+        "message": "Mot de passe"
+    },
+    "passwordPlaceholder": {
+        "message": "Saisissez le mot de passe"
+    },
+    "jwtLabel": {
+        "message": "Token JWT"
+    },
+    "jwtPlaceholder": {
+        "message": "Saisissez votre token JWT"
+    },
+    "rememberMeLabel": {
+        "message": "Se souvenir de moi !"
+    },
+    "checkAndSaveBtn": {
+        "message": "Vérifier & Sauvegarder"
+    },
+    "emailAddressLabel": {
+        "message": "Adresse Email"
+    },
+    "versionLabel": {
+        "message": "Version"
+    },
+    "usedSpaceLabel": {
+        "message": "Espace utilisé"
+    },
+    "resetBtn": {
+        "message": "Réinitialiser"
+    },
+    "messageLabel": {
+        "message": "Message"
+    },
+    "preferencesHeader": {
+        "message": "Préférences"
+    },
+    "receiptSharingLabel": {
+        "message": "Recevoir un accusé de partage"
+    },
+    "receiptNonDownloadLabel": {
+        "message": "Recevoir un accusé de non-téléchargement"
+    },
+    "secureShareLabel": {
+        "message": "Sécuriser le partage"
+    },
+    "updateBtn": {
+        "message": "Mettre à jour"
+    },
+    "footerLine1": {
+        "message": "Vous utilisez la version Open Source et gratuite de LinShare™, propulsée par LINAGORA © 2009–2025."
+    },
+    "footerLine2": {
+        "message": "Contribuez à la R&D de LinShare en souscrivant à une offre Entreprise."
+    },
+    "defaultShareMessage": {
+        "message": "Votre document a été partagé via LinShare"
+    },
+    "errUrlEmailRequired": {
+        "message": "ERREUR : L'URL du serveur et l'email sont obligatoires"
+    },
+    "errPasswordRequired": {
+        "message": "ERREUR : Le mot de passe est obligatoire pour l'authentification Basic"
+    },
+    "errJwtRequired": {
+        "message": "ERREUR : Le token JWT est obligatoire pour l'authentification JWT"
+    },
+    "connexionTesting": {
+        "message": "Test de connexion à LinShare..."
+    },
+    "connexionSuccess": {
+        "message": "Connexion réussie - Paramètres sauvegardés"
+    },
+    "errConnexionFailed": {
+        "message": "ERREUR : Impossible de se connecter à LinShare - Vérifiez vos identifiants"
+    },
+    "errServerUnreachable": {
+        "message": "ERREUR : Impossible de se connecter au serveur LinShare"
+    },
+    "prefsSavedSuccess": {
+        "message": "Préférences sauvegardées avec succès"
+    },
+    "errPrefsSaveFailed": {
+        "message": "ERREUR : Impossible de sauvegarder les préférences"
+    },
+    "settingsResetSuccess": {
+        "message": "Paramètres réinitialisés"
+    },
+    "errSettingsResetFailed": {
+        "message": "ERREUR : Impossible de réinitialiser les paramètres"
+    },
+    "uploadFailed": {
+        "message": "Le téléchargement a échoué"
+    },
+    "uploadTimeout": {
+        "message": "Délai de téléchargement dépassé - le serveur a mis trop de temps à répondre. Veuillez essayer avec un fichier plus petit ou vérifier votre connexion."
+    },
+    "errQuotaReached": {
+        "message": "Le quota du compte a été atteint."
+    },
+    "errVirusFound": {
+        "message": "Le fichier contient un virus"
+    },
+    "totpTitle": {
+        "message": "Code TOTP"
+    },
+    "totpPrompt": {
+        "message": "Saisissez le code généré par votre application d'authentification"
+    },
+    "abortUploadTitle": {
+        "message": "Interrompre le téléchargement"
+    },
+    "abortUploadMsg": {
+        "message": "Le téléchargement vers LinShare est en cours, voulez-vous l'arrêter ?"
+    },
+    "errMessageRequired": {
+        "message": "Le champ message ne peut pas être vide"
+    },
+    "errServerUrlRequired": {
+        "message": "L'URL du serveur ne peut pas être vide"
+    },
+    "errNoPasswordFound": {
+        "message": "Aucun mot de passe trouvé pour l'utilisateur"
+    },
+    "loginFailedTitle": {
+        "message": "Échec de la connexion"
+    },
+    "loginFailedMsg": {
+        "message": "Échec de la connexion, vérifiez vos identifiants"
+    },
+    "shareNotificationSubject": {
+        "message": "Documents partagés avec LinShare"
+    },
+    "shareNotificationHeader": {
+        "message": "Fichiers partagés via LinShare"
+    },
+    "shareNotificationNoteHeader": {
+        "message": "Note :"
+    },
+    "shareNotificationNoteBody": {
+        "message": "Vous recevrez un email séparé de LinShare contenant les liens de téléchargement sécurisés."
+    },
+    "shareNotificationFooter": {
+        "message": "Vous utilisez la version Open Source et gratuite de LinShare™, propulsée par LINAGORA © 2009–2025."
+    },
+    "shareNotificationFiles": {
+        "message": "Fichiers partagés :"
     }
 }

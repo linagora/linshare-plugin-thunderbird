@@ -5,9 +5,19 @@ const { LinshareUtils } = ChromeUtils.importESModule("resource://linshare-module
 const { userProfile } = ChromeUtils.importESModule("resource://linshare-modules/profileStorage.sys.mjs");
 
 let Services = null;
+let _i18n = null;
 
 export function setServices(services) {
   Services = services;
+}
+
+export function setI18n(i18n) {
+  _i18n = i18n;
+}
+
+function i18n(key, fallback = "") {
+  if (_i18n) return _i18n(key) || fallback;
+  return fallback;
 }
 
 export function setBrowserContext(browser) {
@@ -51,7 +61,7 @@ export const LinshareAPI = {
 
     return { ok: false };
   },
-  async checkVersionAndCred(apiVersion, password, code, versionTested = []) {
+  async checkVersionAndCred(apiVersion, password, code) {
     let { headers, url } = LinshareUtils.getRequestContext(
       ROUTES,
       "APIVersion",
@@ -65,17 +75,6 @@ export const LinshareAPI = {
     }
     let response = await LinshareUtils._fetch(url, { headers }, null);
 
-    const API_VERSION = apiVersion;
-    let currentVersion = API_VERSION;
-
-    let nextVersion = currentVersion;
-    let keys = Object.keys(ROUTES.suportedBaseVersion);
-    let vidx = keys.indexOf(currentVersion) + 1;
-    if (vidx < keys.length) {
-      nextVersion = keys[vidx];
-    } else {
-      nextVersion = "v1";
-    }
     if (response.status == 200) {
       if (url.includes("version")) {
         let body = LinshareUtils.handleResponse(response);
@@ -83,9 +82,6 @@ export const LinshareAPI = {
         Preferences.set("linshare.API_VERSION", version);
       }
       return { ok: true };
-    } else if (!versionTested.includes(nextVersion)) {
-      versionTested.push(API_VERSION);
-      return this.checkVersionAndCred(nextVersion, password, code, versionTested);
     }
 
     return { ok: false };
@@ -166,7 +162,7 @@ export const LinshareAPI = {
         return await this.uploadFile(file, uploadProgress, password);
       } else {
         if (Services && Services.prompt) {
-          Services.prompt.alert(null, "Login Failed", "Login Failed, check your credentials");
+          Services.prompt.alert(null, i18n("loginFailedTitle", "Login Failed"), i18n("loginFailedMsg", "Login Failed, check your credentials"));
         } else {
           console.error("Login Failed - Services.prompt not available");
         }
@@ -210,7 +206,8 @@ export const LinshareAPI = {
       attachementsUuids,
       recipients,
       userProfile.apiVersion,
-      ctype
+      ctype,
+      userProfile.userPrefs // Pass user preferences as options
     );
 
     let responses = [];

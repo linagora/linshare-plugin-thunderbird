@@ -4,6 +4,17 @@
 const { ExtensionParent } = ChromeUtils.importESModule("resource://gre/modules/ExtensionParent.sys.mjs");
 const extension = ExtensionParent.GlobalManager.getExtension("linshare@linagora");
 
+let _i18n = null;
+
+export function setI18n(i18n) {
+  _i18n = i18n;
+}
+
+function i18n(key, fallback = "") {
+  if (_i18n) return _i18n(key) || fallback;
+  return fallback;
+}
+
 export const TBUIHandlers = {
   // Removed getCurrentComposeWindow() - we now use tab references from WebExtension API
 
@@ -48,7 +59,7 @@ export const TBUIHandlers = {
   async displayMessage(message) {
     await browser.notifications.create({
       type: "basic",
-      title: "LinShare",
+      title: i18n("extensionName", "LinShare"),
       message: message
     });
   }

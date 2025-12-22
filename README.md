@@ -6,22 +6,18 @@ by writing a new mail. There is a new button in the compose window named
 the plugin will upload attachments and share them with the recipients of the
 current mail before sending the original mail without attachments.
 
-The 2.0.0 version work with :
+The 3.0.0 version works with:
 
-* LinShare : 1.x to 4.1.
-* ThunderBird : 78+
+* LinShare: 5.x+
+* Thunderbird: 115+ (Supernova, Nebula, and beyond)
 
-The 1.9.0 version work with :
+Key Features:
+- **Full Localization**: Support for English and French.
+- **Secure Password Storage**: Integration with Thunderbird's native Password Manager.
+- **Streamlined API**: Focus on LinShare API v5 for better performance and reliability.
+- **Modernized Core**: Rewritten using ES Modules and latest Experiment API standards.
 
-* LinShare : 1.x to 2.3.
-* ThunderBird : 68+
+The 2.0.0 version works with:
 
-The 1.8.0 version work with :
-
-* LinShare : 1.x to 2.2.
-* ThunderBird : 45 to 60+
-
-And the 1.7.1 version work with :
-
-* LinShare : 0.x to 2.2.
-* ThunderBird : 3.x to 59
+* LinShare: 1.x to 4.1.
+* Thunderbird: 78+

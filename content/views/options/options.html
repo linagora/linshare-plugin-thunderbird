@@ -12,7 +12,7 @@
   <script src="../../../skin/js/jquery-3.5.1.slim.min.js"></script>
   <script src="../../../skin/js/bootstrap.min.js"></script>
   <script src="options.js" defer></script>
-  <title>Linshare Settings</title>
+  <title data-i18n="optionsTitle">Linshare Settings</title>
 </head>
 
 <body>
@@ -21,68 +21,68 @@
     <div class="header-logo">
       <div class="libre-badge">
         <img src="../../../assets/libre.png" alt="libre icon" />
-        <span>Libre & Free</span>
+        <span data-i18n="libreBadge">Libre & Free</span>
       </div>
       <div class="logo-main">
         <img src="../../../assets/ls-logo-big.png" alt="LinShare logo" />
         <h1 class="logo-text">LinShare</h1>
       </div>
-      <p class="tagline">Secure file sharing app in open source</p>
+      <p class="tagline" data-i18n="tagline">Secure file sharing app in open source</p>
     </div>
 
     <!-- Connection Form -->
     <div id="connexion" class="pane">
       <div class="card">
         <div class="card-header">
-          <h2 class="cs-title">Connexion</h2>
+          <h2 class="cs-title" data-i18n="connexionHeader">Connexion</h2>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-lg-8">
               <div class="form-group">
-                <label>Server URL</label>
+                <label data-i18n="serverUrlLabel">Server URL</label>
                 <input id="in-server-url" class="form-control" type="text"
-                  placeholder="Enter your linshare server URL" />
+                  data-i18n-placeholder="serverUrlPlaceholder" placeholder="Enter your linshare server URL" />
               </div>
             </div>
             <div class="col-lg-4">
               <div class="form-group">
-                <label>Base URL</label>
-                <input id="in-base-url" class="form-control" type="text" placeholder="Enter your base URL" />
+                <label data-i18n="baseUrlLabel">Base URL</label>
+                <input id="in-base-url" class="form-control" type="text" data-i18n-placeholder="baseUrlPlaceholder" placeholder="Enter your base URL" />
               </div>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Email</label>
-            <input id="in-user-email" class="form-control" type="email" placeholder="Enter your email" />
+            <label data-i18n="emailLabel">Email</label>
+            <input id="in-user-email" class="form-control" type="email" data-i18n-placeholder="emailPlaceholder" placeholder="Enter your email" />
           </div>
 
           <div class="form-group">
-            <label>Authentication Type</label>
+            <label data-i18n="authTypeLabel">Authentication Type</label>
             <select id="in-auth-type" class="form-control">
-              <option value="basic">Basic Authentication (User/Password)</option>
-              <option value="jwt">JWT Token</option>
+              <option value="basic" data-i18n="authTypeBasic">Basic Authentication (User/Password)</option>
+              <option value="jwt" data-i18n="authTypeJwt">JWT Token</option>
             </select>
           </div>
 
           <div class="form-group" id="password-group">
-            <label>Password</label>
-            <input id="in-user-password" class="form-control" type="password" placeholder="Enter password" />
+            <label data-i18n="passwordLabel">Password</label>
+            <input id="in-user-password" class="form-control" type="password" data-i18n-placeholder="passwordPlaceholder" placeholder="Enter password" />
           </div>
 
           <div class="form-group" id="jwt-group" style="display: none;">
-            <label>JWT Token</label>
-            <input id="in-jwt-token" class="form-control" type="text" placeholder="Enter your JWT token" />
+            <label data-i18n="jwtLabel">JWT Token</label>
+            <input id="in-jwt-token" class="form-control" type="text" data-i18n-placeholder="jwtPlaceholder" placeholder="Enter your JWT token" />
           </div>
 
           <div class="custom-control">
             <input type="checkbox" class="custom-control-input" id="in-remember-me" />
-            <label class="custom-control-label" for="in-remember-me">Remember me!</label>
+            <label class="custom-control-label" for="in-remember-me" data-i18n="rememberMeLabel">Remember me!</label>
           </div>
         </div>
         <div class="card-footer">
-          <button id="save-settings" type="submit" class="btn-primary">Check & Save</button>
+          <button id="save-settings" type="submit" class="btn-primary" data-i18n="checkAndSaveBtn">Check & Save</button>
         </div>
       </div>
     </div>
@@ -107,7 +107,7 @@
                         <i class="fa fa-phone-square"></i>
                       </div>
                       <div class="list-details">
-                        <small>Server URL</small>
+                        <small data-i18n="serverUrlLabel">Server URL</small>
                         <span id="linshare-server-url">https://linshare.fr</span>
                       </div>
                     </li>
@@ -116,7 +116,7 @@
                         <i class="fa fa-envelope"></i>
                       </div>
                       <div class="list-details">
-                        <small>Base URL</small>
+                        <small data-i18n="baseUrlLabel">Base URL</small>
                         <span id="linshare-base-url">/linshare</span>
                       </div>
                     </li>
@@ -125,7 +125,7 @@
                         <i class="fa fa-envelope"></i>
                       </div>
                       <div class="list-details">
-                        <small>Email Address</small>
+                        <small data-i18n="emailAddressLabel">Email Address</small>
                         <span id="linshare-user-email">user@example.com</span>
                       </div>
                     </li>
@@ -134,13 +134,13 @@
                         <i class="fa fa-globe"></i>
                       </div>
                       <div class="list-details">
-                        <small>Version</small>
+                        <small data-i18n="versionLabel">Version</small>
                         <span id="linshare-server-version">4.0</span>
                       </div>
                     </li>
                   </ul>
                   <div class="mb-0 user-quota">
-                    <small class="mb-0">Espace utilisé</small>
+                    <small class="mb-0" data-i18n="usedSpaceLabel">Espace utilisé</small>
                     <div class="progress">
                       <div id="user-quota" class="progress-bar progress-bar-striped" role="progressbar"
                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
@@ -149,7 +149,7 @@
                 </div>
                 <div class="card-footer text-center">
                   <!-- <button type="button" class="btn btn-primary">Log In</button> -->
-                  <button type="button" id="log-out-btn" class="btn btn-warning btn-block">
+                  <button type="button" id="log-out-btn" class="btn btn-warning btn-block" data-i18n="resetBtn">
                     Reset
                   </button>
                 </div>
@@ -162,22 +162,22 @@
                 <div class="row justify-content-start">
                   <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                     <div class="form-group">
-                      <label for="fullName">Message</label>
+                      <label for="fullName" data-i18n="messageLabel">Message</label>
                       <textarea id="message" class="form-control cs-min-h-1"></textarea>
                     </div>
-                    <h6 class="mb-0">Preferences</h6>
+                    <h6 class="mb-0" data-i18n="preferencesHeader">Preferences</h6>
                     <hr class="mt-1" />
                     <div class="custom-control custom-checkbox mx-2 my-2 w-100">
                       <input type="checkbox" class="custom-control-input" id="accused-of-sharing" checked="" />
-                      <label class="custom-control-label" for="accused-of-sharing">Receive a sharing receipt</label>
+                      <label class="custom-control-label" for="accused-of-sharing" data-i18n="receiptSharingLabel">Receive a sharing receipt</label>
                     </div>
                     <div class="custom-control custom-checkbox mx-2 my-2 w-100">
                       <input type="checkbox" class="custom-control-input" id="no-download" checked="" />
-                      <label class="custom-control-label" for="no-download">Receive a non-download receipt</label>
+                      <label class="custom-control-label" for="no-download" data-i18n="receiptNonDownloadLabel">Receive a non-download receipt</label>
                     </div>
                     <div class="custom-control custom-checkbox mx-2 my-2 w-100">
                       <input type="checkbox" class="custom-control-input" id="secure-share" checked="" />
-                      <label class="custom-control-label" for="secure-share">Secure the sharing</label>
+                      <label class="custom-control-label" for="secure-share" data-i18n="secureShareLabel">Secure the sharing</label>
                     </div>
                   </div>
                 </div>
@@ -186,7 +186,7 @@
                 <div class="row">
                   <div class="col">
                     <div class="text-right">
-                      <button type="button" id="save-prefs" name="update" class="btn btn-primary">
+                      <button type="button" id="save-prefs" name="update" class="btn btn-primary" data-i18n="updateBtn">
                         Update
                       </button>
                     </div>
@@ -201,8 +201,9 @@
     <footer>
       <p class="text-white text-center position-sticky mt-2"
         style="font-family: roboto, sans-serif; font-size: 11px; width: 100%; bottom: 0px">
-        You are using the Open Source and free version of LinShare™, powered by Linagora © 2009–2019.
-        Contribute to LinShare R&D by subscribing to an Enterprise offer.
+        <span data-i18n="footerLine1">You are using the Open Source and free version of LinShare™, powered by Linagora © 2009–2019.</span>
+        <br/>
+        <span data-i18n="footerLine2">Contribute to LinShare R&D by subscribing to an Enterprise offer.</span>
       </p>
     </footer>
   </div>

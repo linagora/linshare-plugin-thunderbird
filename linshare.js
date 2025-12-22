@@ -115,14 +115,21 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
           if (prefModule.setServices) prefModule.setServices(Services);
 
           if (profileModule.setServices) profileModule.setServices(Services);
+          if (profileModule.setI18n) profileModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+
+          const apiModule = ChromeUtils.importESModule("resource://linshare-modules/linshareAPI.sys.mjs");
+          if (apiModule.setServices) apiModule.setServices(Services);
+          if (apiModule.setI18n) apiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
 
           const utilsModule = ChromeUtils.importESModule("resource://linshare-modules/linshareUtils.sys.mjs");
           if (utilsModule.setServices) utilsModule.setServices(Services);
+          if (utilsModule.setI18n) utilsModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
 
           const uiModule = ChromeUtils.importESModule("resource://linshare-modules/TBUIHandlers.sys.mjs");
           if (uiModule.setServices) uiModule.setServices(Services);
+          if (uiModule.setI18n) uiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
 
-          console.log("LinShare: Services injected into modules");
+          console.log("LinShare: Services and I18n injected into modules");
         } else {
           console.error("LinShare: CRITICAL - Services not available!");
         }
@@ -237,6 +244,17 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
           const profileModule = ChromeUtils.importESModule("resource://linshare-modules/profileStorage.sys.mjs");
           userProfile = profileModule.userProfile;
           console.log("LinShare: userProfile loaded:", !!userProfile);
+
+          // Inject i18n into modules
+          if (profileModule.setI18n) profileModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+
+          if (apiModule.setI18n) apiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+
+          const utilsModule = ChromeUtils.importESModule("resource://linshare-modules/linshareUtils.sys.mjs");
+          if (utilsModule.setI18n) utilsModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+
+          const uiModule = ChromeUtils.importESModule("resource://linshare-modules/TBUIHandlers.sys.mjs");
+          if (uiModule.setI18n) uiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
 
           console.log("LinShare: Real modules loaded successfully in getAPI");
         } else {
@@ -437,19 +455,21 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
           console.log("getUserSettings called");
           return userProfile.allInfos;
         },
-        async saveUserAccount(serverUrl, baseUrl, userEmail, password, mustSave) {
+        async saveUserAccount(serverUrl, baseUrl, userEmail, password, mustSave, authType, jwtToken) {
           console.log("saveUserAccount called");
           userProfile.serverUrl = serverUrl.replace(/\/$/, "");
-          userProfile.baseUrl = baseUrl.replace(/^\//, "");
+          userProfile.baseUrl = baseUrl.replace(/^\//, "") || "linshare";
           userProfile.userEmail = userEmail;
           userProfile.mustSave = mustSave;
-          userProfile.allInfos = {
-            SERVER_URL: serverUrl,
-            BASE_URL: baseUrl,
-            USER_EMAIL: userEmail,
-            DISPLAY_NAME: userEmail,
-            MUST_SAVE: mustSave
-          };
+          userProfile.authType = authType || "basic";
+          userProfile.jwtToken = jwtToken || "";
+          userProfile.displayName = userEmail;
+          userProfile.apiVersion = "v5";
+
+          if (userProfile.authType === "basic" && password) {
+            await userProfile.saveUserPasswordInTBVault(password, mustSave);
+          }
+
           return { success: true, MESSAGE: "Account saved successfully" };
         },
         async getUserPrefs() {

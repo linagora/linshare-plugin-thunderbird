@@ -1,12 +1,28 @@
-<a name="1.8.0"></a>
-# [1.8.0](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.7.1...1.8.0) (2018-10-31) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.8.0/)
+<a name="3.0.0"></a>
+# 3.0.0 (2025-12-22)
+
+### Features
+* **Modernization**: Full compatibility with Thunderbird 115+ (Supernova, Nebula, and beyond).
+* **Internationalization**: Implementation of comprehensive multi-language support (English and French).
+* **Security**: Migrated password storage to the native Thunderbird Password Manager.
+* **Streamlined API**: Optimized for LinShare API v5, removing legacy and unused code.
+* **UI Enhancements**: Modernized options page with better feedback and localized UI.
+
+### Internal Changes
+* Migrated from JSM to ES Modules (`.sys.mjs`).
+* Refactored Experiment API for better stability and modern Thunderbird requirements.
+* Cleaned up legacy v1, v2, and v4 API routes.
+
+---
+
+# [1.8.0](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.7.1...1.8.0) (2018-10-31) [Download link](http://download.linshare.app/components/linshare-plugin-thunderbird/1.8.0/)
 
 ### Bug Fixes
 
 * Support of ThunderBird 60
 
 <a name="1.7.1"></a>
-# [1.7.1](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.7...v1.7.1) (2016-11-28) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.7.1/)
+# [1.7.1](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.7...v1.7.1) (2016-11-28) [Download link](http://download.linshare.app/components/linshare-plugin-thunderbird/1.7.1/)
 
 ### Bug Fixes
 
@@ -17,7 +33,7 @@
 
 
 <a name="1.7"></a>
-# [1.7](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.6...1.7) (2013-05-21) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.7/)
+# [1.7](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.6...1.7) (2013-05-21) [Download link](http://download.linshare.app/components/linshare-plugin-thunderbird/1.7/)
 
 ### Bug Fixes
 
@@ -27,7 +43,7 @@
 
 
 <a name="1.6"></a>
-# [1.6](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.5...1.6) (2012-12-21) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.6/)
+# [1.6](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.5...1.6) (2012-12-21) [Download link](http://download.linshare.app/components/linshare-plugin-thunderbird/1.6/)
 
 ### Features
 
@@ -35,7 +51,7 @@
 
 
 <a name="1.5"></a>
-# [1.5](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.4...1.5) (2012-11-26) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.5/)
+# [1.5](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.4...1.5) (2012-11-26) [Download link](http://download.linshare.app/components/linshare-plugin-thunderbird/1.5/)
 
 ### Features
 
@@ -43,7 +59,7 @@
 
 
 <a name="1.4"></a>
-# [1.4](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.3...1.4) (2012-10-04) [Download link](http://download.linshare.org/components/linshare-plugin-thunderbird/1.4/)
+# [1.4](https://github.com/linagora/linshare-plugin-thunderbird/compare/1.3...1.4) (2012-10-04) [Download link](http://download.linshare.app/components/linshare-plugin-thunderbird/1.4/)
 
 ### Bug Fixes
 

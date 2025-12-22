@@ -5,6 +5,21 @@ const { FileUtils } = ChromeUtils.importESModule("resource://gre/modules/FileUti
 const { Preferences } = ChromeUtils.importESModule("resource://linshare-modules/preferences.sys.mjs");
 const { TBUIHandlers } = ChromeUtils.importESModule("resource://linshare-modules/TBUIHandlers.sys.mjs");
 
+let Services = null;
+let _i18n = null;
+
+export function setServices(services) {
+  Services = services;
+}
+
+export function setI18n(i18n) {
+  _i18n = i18n;
+}
+
+function i18n(key, fallback = "") {
+  if (_i18n) return _i18n(key) || fallback;
+  return fallback;
+}
 
 export const LinshareUtils = {
   getRequestContext(ROUTES, endpoint, USER_INFOS, password, apiVersion = null) {
@@ -23,117 +38,43 @@ export const LinshareUtils = {
     let headers = this.buidRequestHeaders(authorization, ctype, SERVER_URL);
     return { headers, url, ctype };
   },
-  buildShareRequest(headers, url, attachementsUuids, recipients, apiVersion, ctype) {
+  buildShareRequest(headers, url, attachementsUuids, recipients, apiVersion, ctype, options = {}) {
     let requests = [];
-    let urlParams = apiVersion == "v1" ? this.useUrlParams(attachementsUuids) : [];
     let init = {
       method: "POST",
       headers,
     };
-    if (apiVersion == "v1") {
-      for (let i = 0; i < recipients.length; i++) {
-        urlParams.set("targetMail", recipients[i]);
-        let params = urlParams.toString();
-        init.params = urlParams;
-        requests.push({ url, init });
-      }
-    } else {
-      let body = this.buildRequestBody(attachementsUuids, recipients);
-      init.headers.append("accept", ctype);
-      init.body = JSON.stringify(body);
-      requests.push({ url, init });
-    }
+    let body = this.buildRequestBody(attachementsUuids, recipients, options);
+    init.headers.append("accept", ctype);
+    init.body = JSON.stringify(body);
+    requests.push({ url, init });
     return requests;
   },
-  useUrlParams(attachementsUuids) {
-    const urlParams = new URLSearchParams();
-    for (let i = 0; i < attachementsUuids.length; i++) {
-      if (i == 0) {
-        urlParams.append("file", attachementsUuids[i]);
-      } else {
-        urlParams.append("file" + i, attachementsUuids[i]);
-      }
-    }
-    return urlParams;
-  },
-  buidRequestHeaders(authorization, ctype, serverUrl) {
-    let headers = new Headers({
-      Authorization: authorization,
-      redirect: "error",
-      "Content-Type": ctype,
-      Connection: "close",
-      Accept: ctype,
-    });
-    // Cookie handling removed - Services.cookies not available in TB 140+
-    // LinShare API should work with Basic Auth alone
-    return headers;
-  },
-  buildRequestBody(attachementsUuids, recipients) {
-    let body = {
-      recipients: [],
-      documents: [],
-    };
-    attachementsUuids.forEach((attachementsUuid) => {
-      body.documents.push(attachementsUuid);
-    });
-    recipients.forEach((recipient) => {
-      body.recipients.push({ mail: recipient });
-    });
-
-    if (Preferences.get("linshare.ACCUSED_OF_SHARING")) {
-      body = {
-        ...body,
-        creationAcknowledgement: Preferences.get("linshare.ACCUSED_OF_SHARING"),
-      };
-    }
-    if (Preferences.get("linshare.SECURE_SHARE")) {
-      body = {
-        ...body,
-        secured: Preferences.get("linshare.SECURE_SHARE"),
-      };
-    }
-    if (Preferences.get("linshare.NO_DOWNLOAD")) {
-      let d = new Date();
-      d.setDate(d.getDate() + 15);
-      let timestamp = d.getTime();
-      body = {
-        ...body,
-        expirationDate: timestamp,
-      };
-    }
-
-    return body;
-  },
-
   handleResponse(response, field = null) {
     let contentType = response.type;
     if (contentType.includes("application/json")) {
       return field ? JSON.parse(response.body)[field] : JSON.parse(response.body);
-    } else if (contentType.includes("application/xml")) {
-      var oParser = new DOMParser();
-      var text = oParser.parseFromString(response.body, "application/xml");
-      return field ? text.getElementsByTagName(field) : text;
     }
   },
   async handleError(err) {
-    let errorMessage = "Upload failed";
+    let errorMessage = i18n("uploadFailed", "Upload failed");
 
     // Handle timeout errors
     if (err.status === 504) {
-      errorMessage = "Upload timeout - the server took too long to respond. Please try with a smaller file or check your connection.";
+      errorMessage = i18n("uploadTimeout", "Upload timeout - the server took too long to respond. Please try with a smaller file or check your connection.");
       console.error(errorMessage);
       throw new Error(errorMessage);
     }
 
     // Handle other HTTP errors
     if (err.status === 420) {
-      errorMessage = "The account quota has been reached.";
+      errorMessage = i18n("errQuotaReached", "The account quota has been reached.");
       console.error(errorMessage);
       throw new Error(errorMessage);
     }
 
     if (err.status === 451) {
-      errorMessage = "File contains virus";
+      errorMessage = i18n("errVirusFound", "File contains virus");
       console.error(errorMessage);
       throw new Error(errorMessage);
     }
@@ -225,8 +166,8 @@ export const LinshareUtils = {
     while (!patern.test(code.value)) {
       dialog = Services.prompt.prompt(
         TBUIHandlers.getCurrentComposeWindow(),
-        "TOTP code",
-        "Saisissez le code généré par l'application FreeOTP",
+        i18n("totpTitle", "TOTP code"),
+        i18n("totpPrompt", "Please enter the TOTP code generated by your app"),
         code,
         null,
         {

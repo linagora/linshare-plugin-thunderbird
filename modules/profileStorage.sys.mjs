@@ -3,18 +3,25 @@ const { Preferences, setServices: setPreferencesServices } = ChromeUtils.importE
 const { TBUIHandlers } = ChromeUtils.importESModule("resource://linshare-modules/TBUIHandlers.sys.mjs");
 
 let Services = null;
+let _i18n = null;
 
 export function setServices(services) {
   Services = services;
   setPreferencesServices(services);
 }
 
+export function setI18n(i18n) {
+  _i18n = i18n;
+}
+
+function i18n(key, fallback = "") {
+  if (_i18n) return _i18n(key) || fallback;
+  return fallback;
+}
+
 export const userProfile = {
   availablePrefs: {
     v5: ["message", "accusedOfSharing", "noDownload", "secureShare"],
-    v4: ["message", "accusedOfSharing", "noDownload", "secureShare"],
-    v2: ["message", "accusedOfSharing", "noDownload", "secureShare"],
-    v1: ["message"],
   },
 
   get userPrefs() {
@@ -27,7 +34,7 @@ export const userProfile = {
 
   set userPrefs(prefs) {
     for (let pref of this.availablePrefs[this.apiVersion]) {
-      if (pref == "message" && !prefs[pref]) throw new Error("Message field cannot be empty");
+      if (pref == "message" && !prefs[pref]) throw new Error(i18n("errMessageRequired", "Message field cannot be empty"));
       if (prefs[pref] != null && prefs[pref] != undefined) {
         this[pref] = prefs[pref];
       }
@@ -35,7 +42,7 @@ export const userProfile = {
   },
 
   get connexionInfos() {
-    if (!this.serverUrl) throw new Error("Server URL cannot be empty");
+    if (!this.serverUrl) throw new Error(i18n("errServerUrlRequired", "Server URL cannot be empty"));
     return {
       SERVER_URL: this.serverUrl,
       USER_EMAIL: this.userEmail,
@@ -47,7 +54,7 @@ export const userProfile = {
   },
 
   get allInfos() {
-    if (!this.serverUrl) return new Error("Server URL cannot be empty");
+    if (!this.serverUrl) return new Error(i18n("errServerUrlRequired", "Server URL cannot be empty"));
     return {
       ...this.connexionInfos,
       USER_DISPLAYNAME: this.displayName,
@@ -92,72 +99,70 @@ export const userProfile = {
   set userQuota(quota) { Preferences.set("linshare.USER_QUOTA", quota); },
 
   get message() {
-    return Preferences.get(
+    return this._runtimeConfig?.userPrefs?.message || Preferences.get(
       "linshare.MESSAGE",
-      "Un premier courriel vous a été adressé précédemment pour télécharger vos fichiers depuis l'application de partage LinShare."
+      i18n("defaultShareMessage", "Your document has been shared via LinShare")
     );
   },
   set message(message) { Preferences.set("linshare.MESSAGE", message); },
 
-  get accusedOfSharing() { return Preferences.get("linshare.ACCUSED_OF_SHARING", true); },
+  get accusedOfSharing() {
+    if (this._runtimeConfig?.userPrefs?.accusedOfSharing !== undefined) {
+      return this._runtimeConfig.userPrefs.accusedOfSharing;
+    }
+    return Preferences.get("linshare.ACCUSED_OF_SHARING", false);
+  },
   set accusedOfSharing(val) { Preferences.set("linshare.ACCUSED_OF_SHARING", val); },
 
-  get noDownload() { return Preferences.get("linshare.NO_DOWNLOAD", true); },
+  get noDownload() {
+    if (this._runtimeConfig?.userPrefs?.noDownload !== undefined) {
+      return this._runtimeConfig.userPrefs.noDownload;
+    }
+    return Preferences.get("linshare.NO_DOWNLOAD", false);
+  },
   set noDownload(val) { Preferences.set("linshare.NO_DOWNLOAD", val); },
 
-  get secureShare() { return Preferences.get("linshare.SECURE_SHARE", true); },
+  get secureShare() {
+    if (this._runtimeConfig?.userPrefs?.secureShare !== undefined) {
+      return this._runtimeConfig.userPrefs.secureShare;
+    }
+    return Preferences.get("linshare.SECURE_SHARE", false);
+  },
   set secureShare(val) { Preferences.set("linshare.SECURE_SHARE", val); },
 
   // Password management using ExtensionStorage (compatible with options.js)
   async getUserPassword() {
     try {
-      // Try to read from WebExtension storage first (where options.js saves it)
-      // We need to dynamically import ExtensionStorage if not available
+      // 1. Try native vault first (most secure)
+      if (Services && Services.logins && this.serverUrl) {
+        let logins = Services.logins.findLogins(this.serverUrl, null, this.serverUrl);
+        if (logins && logins.length > 0) {
+          let log = logins.find((l) => l.username === this.userEmail);
+          if (log) {
+            console.log("LinShare: Password found in native vault");
+            return log.password;
+          }
+        }
+      }
+
+      // 2. Fallback to ExtensionStorage (legacy/migration)
       let ExtensionStorage;
       try {
         const esModule = ChromeUtils.importESModule("resource://gre/modules/ExtensionStorage.sys.mjs");
         ExtensionStorage = esModule.ExtensionStorage;
       } catch (e) {
-        // Fallback for older versions if needed, but TB 120+ should have it
         console.error("ExtensionStorage not found", e);
       }
 
       if (ExtensionStorage) {
-        console.log("LinShare: ExtensionStorage available, trying to get data for linshare@linagora");
-        try {
-          const data = await ExtensionStorage.get("linshare@linagora", ["linshareUserInfos"]);
-          console.log("LinShare: ExtensionStorage data retrieved:", JSON.stringify(data));
-
-          if (data && data.linshareUserInfos) {
-            console.log("LinShare: linshareUserInfos found");
-            if (data.linshareUserInfos.USER_PASSWORD) {
-              console.log("LinShare: Password found in ExtensionStorage");
-              return data.linshareUserInfos.USER_PASSWORD;
-            } else {
-              console.log("LinShare: USER_PASSWORD missing in linshareUserInfos");
-            }
-          } else {
-            console.log("LinShare: linshareUserInfos missing in data");
-          }
-        } catch (storageError) {
-          console.error("LinShare: Error reading ExtensionStorage:", storageError);
-        }
-      } else {
-        console.error("LinShare: ExtensionStorage NOT available");
-      }
-
-      // Fallback to Services.logins (legacy)
-      if (Services && Services.logins) {
-        let logins = Services.logins.findLogins(this.serverUrl, null, this.serverUrl);
-        if (logins && logins.length > 0) {
-          let log = logins.filter((login) => login.username == this.userEmail);
-          if (log && log.length > 0) {
-            return log[0].password;
-          }
+        const data = await ExtensionStorage.get("linshare@linagora", ["linshareUserInfos"]);
+        if (data?.linshareUserInfos?.USER_PASSWORD) {
+          console.log("LinShare: Password found in ExtensionStorage (legacy)");
+          return data.linshareUserInfos.USER_PASSWORD;
         }
       }
 
-      throw new Error('No password found for user');
+      throw new Error(i18n("errNoPasswordFound", "No password found for user"));
     } catch (error) {
       console.error("Error getting password:", error);
       throw error;
@@ -165,10 +170,39 @@ export const userProfile = {
   },
 
   async saveUserPasswordInTBVault(userPassword, remember) {
-    // This is mainly called by legacy code or if we wanted to save from backend
-    // But options.js handles saving now.
-    // We'll leave this as a no-op or fallback.
-    return { success: true, MESSAGE: "Password management handled by options page" };
+    if (!Services || !Services.logins) {
+      console.error("LinShare: Services.logins not available");
+      return { success: false, MESSAGE: "Login manager not available" };
+    }
+
+    try {
+      const loginInfo = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+      loginInfo.init(
+        this.serverUrl,
+        null, // No form submit URL
+        this.serverUrl,
+        this.userEmail,
+        userPassword,
+        "",
+        ""
+      );
+
+      // Check if login already exists
+      let logins = Services.logins.findLogins(this.serverUrl, null, this.serverUrl);
+      let existing = logins.find(l => l.username === this.userEmail);
+
+      if (existing) {
+        Services.logins.modifyLogin(existing, loginInfo);
+        console.log("LinShare: Password updated in native vault");
+      } else {
+        Services.logins.addLogin(loginInfo);
+        console.log("LinShare: Password added to native vault");
+      }
+      return { success: true, MESSAGE: "Password saved in native vault" };
+    } catch (e) {
+      console.error("LinShare: Error saving password to native vault:", e);
+      return { success: false, MESSAGE: e.message };
+    }
   },
 
   // Legacy encrypted storage - keeping for reference but likely unused if options.js is standard
@@ -181,9 +215,22 @@ export const userProfile = {
   },
 
   resetProfileInfos() {
+    // Clear preferences
     Preferences.resetBranch("linshare.");
-    // Also clear extension storage?
-    // ExtensionStorage.set("linshare@linagora", { linshareUserInfos: {} });
+
+    // Clear native vault
+    if (Services && Services.logins && this.serverUrl) {
+      try {
+        let logins = Services.logins.findLogins(this.serverUrl, null, this.serverUrl);
+        let existing = logins.find(l => l.username === this.userEmail);
+        if (existing) {
+          Services.logins.removeLogin(existing);
+          console.log("LinShare: Password removed from native vault");
+        }
+      } catch (e) {
+        console.error("LinShare: Error clearing native vault:", e);
+      }
+    }
   },
 
   storeFunc(functionalityName, functionalityValue) {

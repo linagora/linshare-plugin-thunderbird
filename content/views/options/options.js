@@ -43,12 +43,35 @@ if (authTypeElem) {
   });
 }
 
+// i18n localization function
+function localizeUI() {
+  console.log("Localizing UI...");
+  document.querySelectorAll("[data-i18n]").forEach(elem => {
+    const key = elem.getAttribute("data-i18n");
+    const msg = browser.i18n.getMessage(key);
+    if (msg) {
+      if (elem.tagName === "TITLE") {
+        document.title = msg;
+      } else {
+        elem.textContent = msg;
+      }
+    }
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(elem => {
+    const key = elem.getAttribute("data-i18n-placeholder");
+    const msg = browser.i18n.getMessage(key);
+    if (msg) elem.placeholder = msg;
+  });
+}
+
 const render = function (authenticated = false) {
-  console.log("Rendu de la page d'options...");
+  console.log("Rendering options page...");
+  localizeUI();
 
   // Utilisation du stockage local au lieu de l'API expérimentale
   browser.storage.local.get(['linshareUserInfos', 'linshareUserPrefs']).then((result) => {
-    console.log("Données récupérées:", result);
+    console.log("Data retrieved:", result);
     const userInfos = result.linshareUserInfos || {
       SERVER_URL: "",
       BASE_URL: "",
@@ -59,7 +82,7 @@ const render = function (authenticated = false) {
       JWT_TOKEN: ""
     };
     const userPrefs = result.linshareUserPrefs || {
-      message: "Votre document a été partagé via LinShare",
+      message: browser.i18n.getMessage("defaultShareMessage"),
       accusedOfSharing: false,
       noDownload: false,
       secureShare: false
@@ -75,7 +98,7 @@ const render = function (authenticated = false) {
       connexionPaneElem.classList.add("show");
     }
   }).catch((error) => {
-    console.error("Erreur lors du chargement des paramètres:", error);
+    console.error("Error loading settings:", error);
     profilPaneElem.classList.remove("show");
     connexionPaneElem.classList.add("show");
   });
@@ -88,17 +111,17 @@ const saveAccount = async function (e) {
 
   // Validation des champs
   if (!serverUrlElem.value || !userEmailElem.value) {
-    alertify.error("ERREUR: L'URL du serveur et l'email sont obligatoires");
+    alertify.error(browser.i18n.getMessage("errUrlEmailRequired"));
     return;
   }
 
   if (authType === "basic" && !userPasswordElem.value) {
-    alertify.error("ERREUR: Le mot de passe est obligatoire pour l'authentification Basic");
+    alertify.error(browser.i18n.getMessage("errPasswordRequired"));
     return;
   }
 
   if (authType === "jwt" && !jwtTokenElem.value) {
-    alertify.error("ERREUR: Le token JWT est obligatoire pour l'authentification JWT");
+    alertify.error(browser.i18n.getMessage("errJwtRequired"));
     return;
   }
 
@@ -106,7 +129,7 @@ const saveAccount = async function (e) {
     SERVER_URL: serverUrlElem.value.replace(/\/$/, ""),
     BASE_URL: baseUrlElem.value.replace(/^\//, "") || "linshare",
     USER_EMAIL: userEmailElem.value,
-    USER_PASSWORD: userPasswordElem.value,
+    USER_PASSWORD: userPasswordElem.value, // This will be passed to Experiment API
     JWT_TOKEN: jwtTokenElem.value,
     AUTH_TYPE: authType,
     DISPLAY_NAME: userEmailElem.value,
@@ -116,7 +139,7 @@ const saveAccount = async function (e) {
 
   // Test de connexion à LinShare
   try {
-    alertify.message("Test de connexion à LinShare...");
+    alertify.message(browser.i18n.getMessage("connexionTesting"));
 
     const testUrl = `${userInfos.SERVER_URL}/${userInfos.BASE_URL}/webservice/rest/user/v5/authentication/authorized`;
 
@@ -136,15 +159,32 @@ const saveAccount = async function (e) {
     });
 
     if (response.ok) {
-      await browser.storage.local.set({ linshareUserInfos: userInfos });
-      alertify.success("Connexion réussie - Paramètres sauvegardés");
+      // Use Experiment API to save securely
+      if (browser.linshareExtAPI && browser.linshareExtAPI.saveUserAccount) {
+        await browser.linshareExtAPI.saveUserAccount(
+          userInfos.SERVER_URL,
+          userInfos.BASE_URL,
+          userInfos.USER_EMAIL,
+          userInfos.USER_PASSWORD,
+          userInfos.MUST_SAVE,
+          userInfos.AUTH_TYPE,
+          userInfos.JWT_TOKEN
+        );
+      }
+
+      // Save other non-sensitive info to local storage for UI persistence
+      const publicInfos = { ...userInfos };
+      delete publicInfos.USER_PASSWORD; // CRITICAL: Never save password in plain text
+
+      await browser.storage.local.set({ linshareUserInfos: publicInfos });
+      alertify.success(browser.i18n.getMessage("connexionSuccess"));
       render(true);
     } else {
-      alertify.error("ERREUR: Impossible de se connecter à LinShare - Vérifiez vos identifiants");
+      alertify.error(browser.i18n.getMessage("errConnexionFailed"));
     }
   } catch (error) {
-    console.error("Erreur lors du test de connexion:", error);
-    alertify.error("ERREUR: Impossible de se connecter au serveur LinShare");
+    console.error("Connection test error:", error);
+    alertify.error(browser.i18n.getMessage("errServerUnreachable"));
   }
 };
 
@@ -160,10 +200,10 @@ const savePrefs = async function (e) {
 
   try {
     await browser.storage.local.set({ linshareUserPrefs: userPrefs });
-    alertify.success("Préférences sauvegardées avec succès");
+    alertify.success(browser.i18n.getMessage("prefsSavedSuccess"));
   } catch (error) {
-    console.error("Erreur lors de la sauvegarde des préférences:", error);
-    alertify.error("ERREUR: Impossible de sauvegarder les préférences");
+    console.error("Error saving preferences:", error);
+    alertify.error(browser.i18n.getMessage("errPrefsSaveFailed"));
   }
 };
 
@@ -172,11 +212,11 @@ const resetAccount = async function (e) {
 
   try {
     await browser.storage.local.clear();
-    alertify.success("Paramètres réinitialisés");
+    alertify.success(browser.i18n.getMessage("settingsResetSuccess"));
     render(false);
   } catch (error) {
-    console.error("Erreur lors de la réinitialisation:", error);
-    alertify.error("ERREUR: Impossible de réinitialiser les paramètres");
+    console.error("Reset error:", error);
+    alertify.error(browser.i18n.getMessage("errSettingsResetFailed"));
   }
 };
 
@@ -269,19 +309,16 @@ logOutBtn.onclick = resetAccount;
 
 // S'assurer que le DOM est chargé avant d'initialiser
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", render);
+  document.addEventListener("DOMContentLoaded", () => {
+    localizeUI();
+    render();
+  });
 } else {
+  localizeUI();
   render();
 }
 
-// Debug: vérifier que tous les éléments sont trouvés
-console.log("Éléments DOM trouvés:");
-console.log("connexionPaneElem:", !!connexionPaneElem);
-console.log("serverUrlElem:", !!serverUrlElem);
-console.log("profilPaneElem:", !!profilPaneElem);
-console.log("saveSettings:", !!saveSettings);
-
 // Ajouter un gestionnaire d'erreur global pour la page d'options
 window.addEventListener('error', (event) => {
-  console.error('Erreur dans la page d\'options:', event.error);
+  console.error('Error in options page:', event.error);
 });
