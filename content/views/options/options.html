@@ -5,205 +5,210 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="../../../skin/reset.css" />
-  <link rel="stylesheet" href="../../../skin/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../../skin/css/alertify.min.css" />
   <link rel="stylesheet" href="options.css" />
   <script src="../../../skin/js/alertify.min.js"></script>
-  <script src="../../../skin/js/jquery-3.5.1.slim.min.js"></script>
-  <script src="../../../skin/js/bootstrap.min.js"></script>
   <script src="options.js" defer></script>
-  <title data-i18n="optionsTitle">Linshare Settings</title>
+  <title data-i18n="optionsTitle">LinShare Settings</title>
 </head>
 
 <body>
-  <div class="container-pane">
-    <!-- Header with LinShare Logo -->
-    <div class="header-logo">
-      <div class="libre-badge">
-        <img src="../../../assets/libre.png" alt="libre icon" />
-        <span data-i18n="libreBadge">Libre & Free</span>
-      </div>
-      <div class="logo-main">
-        <img src="../../../assets/ls-logo-big.png" alt="LinShare logo" />
-        <h1 class="logo-text">LinShare</h1>
-      </div>
-      <p class="tagline" data-i18n="tagline">Secure file sharing app in open source</p>
-    </div>
+  <div class="ls-options-root">
 
-    <!-- Connection Form -->
-    <div id="connexion" class="pane">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="cs-title" data-i18n="connexionHeader">Connexion</h2>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-lg-8">
-              <div class="form-group">
-                <label data-i18n="serverUrlLabel">Server URL</label>
-                <input id="in-server-url" class="form-control" type="text"
-                  data-i18n-placeholder="serverUrlPlaceholder" placeholder="Enter your linshare server URL" />
-              </div>
+    <!-- Hero / branding -->
+    <header class="ls-hero">
+      <div class="ls-libre">
+        <img src="../../../assets/libre.png" alt="" />
+        <span data-i18n="libreBadge">Libre &amp; Free</span>
+      </div>
+      <div class="ls-brand">
+        <img class="ls-brand-logo" src="../../../assets/ls-logo-big.png" alt="" />
+        <h1 class="ls-brand-wordmark">LinShare</h1>
+      </div>
+      <p class="ls-tagline" data-i18n="tagline">Secure file sharing app in open source</p>
+    </header>
+
+    <!-- Connection pane -->
+    <section id="connexion" class="ls-pane">
+      <div class="ls-card ls-card-connection">
+        <header class="ls-card-head">
+          <h2 class="ls-card-title" data-i18n="connexionHeader">Connexion</h2>
+          <p class="ls-card-sub" data-i18n="connectionCardSubtitle">Point the plugin at your LinShare server.</p>
+        </header>
+
+        <div class="ls-card-body">
+          <div class="ls-row ls-row-2col">
+            <div class="ls-field">
+              <label for="in-server-url" data-i18n="serverUrlLabel">Server URL</label>
+              <input id="in-server-url" class="ls-input" type="text"
+                data-i18n-placeholder="serverUrlPlaceholder" placeholder="Enter your linshare server URL" />
             </div>
-            <div class="col-lg-4">
-              <div class="form-group">
-                <label data-i18n="baseUrlLabel">Base URL</label>
-                <input id="in-base-url" class="form-control" type="text" data-i18n-placeholder="baseUrlPlaceholder" placeholder="Enter your base URL" />
-              </div>
+            <div class="ls-field">
+              <label for="in-base-url" data-i18n="baseUrlLabel">Base URL</label>
+              <input id="in-base-url" class="ls-input" type="text"
+                data-i18n-placeholder="baseUrlPlaceholder" placeholder="Enter your base URL" />
             </div>
           </div>
 
-          <div class="form-group">
-            <label data-i18n="emailLabel">Email</label>
-            <input id="in-user-email" class="form-control" type="email" data-i18n-placeholder="emailPlaceholder" placeholder="Enter your email" />
+          <div class="ls-field">
+            <label for="in-user-email" data-i18n="emailLabel">Email</label>
+            <input id="in-user-email" class="ls-input" type="email"
+              data-i18n-placeholder="emailPlaceholder" placeholder="Enter your email" />
           </div>
 
-          <div class="form-group">
-            <label data-i18n="authTypeLabel">Authentication Type</label>
-            <select id="in-auth-type" class="form-control">
+          <div class="ls-field">
+            <label for="in-auth-type" data-i18n="authTypeLabel">Authentication</label>
+            <select id="in-auth-type" class="ls-input ls-select">
               <option value="basic" data-i18n="authTypeBasic">Basic Authentication (User/Password)</option>
               <option value="jwt" data-i18n="authTypeJwt">JWT Token</option>
             </select>
           </div>
 
-          <div class="form-group" id="password-group">
-            <label data-i18n="passwordLabel">Password</label>
-            <input id="in-user-password" class="form-control" type="password" data-i18n-placeholder="passwordPlaceholder" placeholder="Enter password" />
+          <div class="ls-field" id="password-group">
+            <label for="in-user-password" data-i18n="passwordLabel">Password</label>
+            <input id="in-user-password" class="ls-input" type="password"
+              data-i18n-placeholder="passwordPlaceholder" placeholder="Enter password" />
           </div>
 
-          <div class="form-group" id="jwt-group" style="display: none;">
-            <label data-i18n="jwtLabel">JWT Token</label>
-            <input id="in-jwt-token" class="form-control" type="text" data-i18n-placeholder="jwtPlaceholder" placeholder="Enter your JWT token" />
+          <div class="ls-field" id="jwt-group" style="display: none;">
+            <label for="in-jwt-token" data-i18n="jwtLabel">JWT Token</label>
+            <input id="in-jwt-token" class="ls-input" type="text"
+              data-i18n-placeholder="jwtPlaceholder" placeholder="Enter your JWT token" />
           </div>
 
-          <div class="custom-control">
-            <input type="checkbox" class="custom-control-input" id="in-remember-me" />
-            <label class="custom-control-label" for="in-remember-me" data-i18n="rememberMeLabel">Remember me!</label>
-          </div>
+          <label class="ls-check" for="in-remember-me">
+            <input type="checkbox" id="in-remember-me" />
+            <span data-i18n="rememberMeLabel">Remember me</span>
+          </label>
         </div>
-        <div class="card-footer">
-          <button id="save-settings" type="submit" class="btn-primary" data-i18n="checkAndSaveBtn">Check & Save</button>
-        </div>
+
+        <footer class="ls-card-foot">
+          <button id="save-settings" type="submit" class="ls-btn ls-btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span data-i18n="checkAndSaveBtn">Check &amp; Save</span>
+          </button>
+        </footer>
       </div>
-    </div>
+    </section>
 
-    <!-- Profil show only when user creds are checked -->
-    <div id="profile" class="pane">
-      <div class="container">
-        <div class="row justify-content-md-center">
-          <div class="col-lg-4">
-            <div class="profile-card-4">
-              <div class="card h-100">
-                <div class="card-body text-center bg-primary rounded-top mb-4">
-                  <div class="user-box">
-                    <div id="user-display-avatar" class="avatar"></div>
-                  </div>
-                  <h5 id="user-display-name" class="mb-1 text-white"></h5>
-                </div>
-                <div class="card-body">
-                  <ul class="mb-4 list-group shadow-none">
-                    <li class="list-group-item">
-                      <div class="list-icon">
-                        <i class="fa fa-phone-square"></i>
-                      </div>
-                      <div class="list-details">
-                        <small data-i18n="serverUrlLabel">Server URL</small>
-                        <span id="linshare-server-url">https://linshare.fr</span>
-                      </div>
-                    </li>
-                    <li class="list-group-item">
-                      <div class="list-icon">
-                        <i class="fa fa-envelope"></i>
-                      </div>
-                      <div class="list-details">
-                        <small data-i18n="baseUrlLabel">Base URL</small>
-                        <span id="linshare-base-url">/linshare</span>
-                      </div>
-                    </li>
-                    <li class="list-group-item">
-                      <div class="list-icon">
-                        <i class="fa fa-envelope"></i>
-                      </div>
-                      <div class="list-details">
-                        <small data-i18n="emailAddressLabel">Email Address</small>
-                        <span id="linshare-user-email">user@example.com</span>
-                      </div>
-                    </li>
-                    <li class="list-group-item">
-                      <div class="list-icon">
-                        <i class="fa fa-globe"></i>
-                      </div>
-                      <div class="list-details">
-                        <small data-i18n="versionLabel">Version</small>
-                        <span id="linshare-server-version">4.0</span>
-                      </div>
-                    </li>
-                  </ul>
-                  <div class="mb-0 user-quota">
-                    <small class="mb-0" data-i18n="usedSpaceLabel">Espace utilisé</small>
-                    <div class="progress">
-                      <div id="user-quota" class="progress-bar progress-bar-striped" role="progressbar"
-                        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer text-center">
-                  <!-- <button type="button" class="btn btn-primary">Log In</button> -->
-                  <button type="button" id="log-out-btn" class="btn btn-warning btn-block" data-i18n="resetBtn">
-                    Reset
-                  </button>
-                </div>
+    <!-- Profile pane (post-login) -->
+    <section id="profile" class="ls-pane">
+      <div class="ls-grid">
+
+        <!-- Account card -->
+        <div class="ls-card ls-card-account">
+          <div class="ls-identity">
+            <div id="user-display-avatar" class="ls-avatar" aria-hidden="true"></div>
+            <div class="ls-identity-text">
+              <div id="user-display-name" class="ls-identity-name"></div>
+              <div id="linshare-user-email" class="ls-identity-email"></div>
+            </div>
+          </div>
+
+          <div class="ls-card-body">
+            <ul class="ls-info">
+              <li class="ls-info-row">
+                <span class="ls-info-label" data-i18n="serverUrlLabel">Server URL</span>
+                <span id="linshare-server-url" class="ls-info-value ls-info-mono"></span>
+              </li>
+              <li class="ls-info-row">
+                <span class="ls-info-label" data-i18n="baseUrlLabel">Base URL</span>
+                <span id="linshare-base-url" class="ls-info-value ls-info-mono"></span>
+              </li>
+              <li class="ls-info-row">
+                <span class="ls-info-label" data-i18n="versionLabel">Version</span>
+                <span class="ls-info-value"><span id="linshare-server-version" class="ls-pill"></span></span>
+              </li>
+            </ul>
+
+            <div class="ls-quota">
+              <div class="ls-quota-head">
+                <span class="ls-quota-label" data-i18n="usedSpaceLabel">Storage used</span>
+                <span id="user-quota-stat" class="ls-quota-stat"></span>
+              </div>
+              <div class="ls-quota-bar">
+                <div id="user-quota" class="ls-quota-fill" role="progressbar"
+                  aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
               </div>
             </div>
           </div>
-          <div class="col-lg-8">
-            <div class="card h-100">
-              <div class="card-body">
-                <div class="row justify-content-start">
-                  <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                    <div class="form-group">
-                      <label for="fullName" data-i18n="messageLabel">Message</label>
-                      <textarea id="message" class="form-control cs-min-h-1"></textarea>
-                    </div>
-                    <h6 class="mb-0" data-i18n="preferencesHeader">Preferences</h6>
-                    <hr class="mt-1" />
-                    <div class="custom-control custom-checkbox mx-2 my-2 w-100">
-                      <input type="checkbox" class="custom-control-input" id="accused-of-sharing" checked="" />
-                      <label class="custom-control-label" for="accused-of-sharing" data-i18n="receiptSharingLabel">Receive a sharing receipt</label>
-                    </div>
-                    <div class="custom-control custom-checkbox mx-2 my-2 w-100">
-                      <input type="checkbox" class="custom-control-input" id="no-download" checked="" />
-                      <label class="custom-control-label" for="no-download" data-i18n="receiptNonDownloadLabel">Receive a non-download receipt</label>
-                    </div>
-                    <div class="custom-control custom-checkbox mx-2 my-2 w-100">
-                      <input type="checkbox" class="custom-control-input" id="secure-share" checked="" />
-                      <label class="custom-control-label" for="secure-share" data-i18n="secureShareLabel">Secure the sharing</label>
-                    </div>
-                  </div>
+
+          <footer class="ls-card-foot">
+            <button type="button" id="log-out-btn" class="ls-btn ls-btn-danger">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span data-i18n="signOutAndReset">Sign out &amp; reset settings</span>
+            </button>
+          </footer>
+        </div>
+
+        <!-- Preferences card -->
+        <div class="ls-card ls-card-prefs">
+          <header class="ls-card-head">
+            <h2 class="ls-card-title" data-i18n="preferencesHeader">Sharing preferences</h2>
+            <p class="ls-card-sub" data-i18n="prefsCardSubtitle">Applied to every share you send from Thunderbird.</p>
+          </header>
+
+          <div class="ls-card-body">
+            <div class="ls-field">
+              <label for="message" data-i18n="messageLabel">Default share message</label>
+              <textarea id="message" class="ls-textarea" rows="3"></textarea>
+            </div>
+
+            <div class="ls-section-label" data-i18n="prefsSectionNotifications">Notifications &amp; security</div>
+            <div class="ls-prefs">
+              <label class="ls-pref" for="accused-of-sharing">
+                <input type="checkbox" id="accused-of-sharing" />
+                <div class="ls-pref-text">
+                  <div class="ls-pref-label" data-i18n="receiptSharingLabel">Receive a sharing receipt</div>
+                  <div class="ls-pref-desc" data-i18n="prefSharingReceiptDesc">Get a confirmation email when the share is created.</div>
                 </div>
-              </div>
-              <div class="card-footer text-muted">
-                <div class="row">
-                  <div class="col">
-                    <div class="text-right">
-                      <button type="button" id="save-prefs" name="update" class="btn btn-primary" data-i18n="updateBtn">
-                        Update
-                      </button>
-                    </div>
-                  </div>
+              </label>
+
+              <label class="ls-pref" for="no-download">
+                <input type="checkbox" id="no-download" />
+                <div class="ls-pref-text">
+                  <div class="ls-pref-label" data-i18n="receiptNonDownloadLabel">Notify me when recipients don't download</div>
+                  <div class="ls-pref-desc" data-i18n="prefNoDownloadDesc">LinShare emails you if a share goes unviewed.</div>
                 </div>
-              </div>
+              </label>
+
+              <label class="ls-pref" for="secure-share">
+                <input type="checkbox" id="secure-share" />
+                <div class="ls-pref-text">
+                  <div class="ls-pref-label" data-i18n="secureShareLabel">Secure the share with a one-time link</div>
+                  <div class="ls-pref-desc" data-i18n="prefSecureShareDesc">Recipients get a tokenised URL instead of a permanent one.</div>
+                </div>
+              </label>
             </div>
           </div>
+
+          <footer class="ls-card-foot">
+            <button type="button" id="save-prefs" class="ls-btn ls-btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span data-i18n="updateBtn">Save preferences</span>
+            </button>
+          </footer>
         </div>
+
       </div>
-    </div>
-    <footer>
-      <p class="text-white text-center position-sticky mt-2"
-        style="font-family: roboto, sans-serif; font-size: 11px; width: 100%; bottom: 0px">
-        <span data-i18n="footerLine1">You are using the Open Source and free version of LinShare™, powered by Linagora © 2009–2019.</span>
-        <br/>
-        <span data-i18n="footerLine2">Contribute to LinShare R&D by subscribing to an Enterprise offer.</span>
+    </section>
+
+    <footer class="ls-foot">
+      <p>
+        <span data-i18n="footerLine1">You are using the Open Source and free version of LinShare™, powered by LINAGORA © 2009–2025.</span>
+        <br />
+        <span data-i18n="footerLine2">Contribute to LinShare R&amp;D by subscribing to an Enterprise offer.</span>
       </p>
     </footer>
   </div>

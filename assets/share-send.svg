@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="none" role="img" aria-label="Share and Send via LinShare">
+  <style>
+    .ls-icon-stroke { stroke: #5b5b5b; }
+    @media (prefers-color-scheme: dark) {
+      .ls-icon-stroke { stroke: #d4d4d4; }
+    }
+  </style>
+  <!-- Cloud outline -->
+  <path class="ls-icon-stroke"
+        d="M12.2 12.4H4.1a2.8 2.8 0 0 1-.7-5.55A3.8 3.8 0 0 1 10.85 5.6 2.8 2.8 0 0 1 12.2 12.4z"
+        stroke-width="1.25" stroke-linejoin="round" fill="none"/>
+  <!-- Upload arrow -->
+  <path class="ls-icon-stroke"
+        d="M8 10.8V5.5M8 5.5L6.3 7.2M8 5.5l1.7 1.7"
+        stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

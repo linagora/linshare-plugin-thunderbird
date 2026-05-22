@@ -35,8 +35,25 @@ export const LinshareUtils = {
       authorization = `Basic ${btoa(`${USER_EMAIL}:${password}`)}`;
     }
 
-    let headers = this.buidRequestHeaders(authorization, ctype, SERVER_URL);
+    let headers = this.buildRequestHeaders(authorization, ctype, SERVER_URL);
     return { headers, url, ctype };
+  },
+  buildRequestHeaders(authorization, ctype) {
+    const headers = new Headers();
+    headers.append("Authorization", authorization);
+    if (ctype) headers.append("Content-Type", ctype);
+    return headers;
+  },
+  buildRequestBody(attachementsUuids, recipients, options = {}) {
+    // LinShare v5 share endpoint body shape.
+    return {
+      documents: attachementsUuids,
+      recipients: recipients.map((mail) => ({ mail })),
+      secured: !!options.secureShare,
+      creationAcknowledgement: !!options.accusedOfSharing,
+      enableUSDA: !!options.noDownload,
+      message: options.message || "",
+    };
   },
   buildShareRequest(headers, url, attachementsUuids, recipients, apiVersion, ctype, options = {}) {
     let requests = [];
@@ -133,13 +150,16 @@ export const LinshareUtils = {
     });
   },
   makeResponseHeaders(str) {
-    let headers = str
-      .match(/.*/g)
-      .filter((e) => e)
-      .map((e) => {
-        return e.split(":");
-      });
-    return new Headers(Object.fromEntries(headers));
+    // Split each header line on the FIRST colon only; values like URLs or
+    // `Date:` timestamps contain colons of their own.
+    const headers = new Headers();
+    str.split(/\r?\n/).forEach((line) => {
+      if (!line) return;
+      const idx = line.indexOf(":");
+      if (idx <= 0) return;
+      headers.append(line.slice(0, idx).trim(), line.slice(idx + 1).trim());
+    });
+    return headers;
   },
 
   async getwantedPrefs(res) {

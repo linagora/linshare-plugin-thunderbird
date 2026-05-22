@@ -6,7 +6,7 @@
         "message": "LinShare"
     },
     "shareButton": {
-        "message": "Share&Send"
+        "message": "Share & Send"
     },
     "optionsTitle": {
         "message": "Linshare Settings"
@@ -18,7 +18,10 @@
         "message": "Secure file sharing app in open source"
     },
     "connexionHeader": {
-        "message": "Connexion"
+        "message": "Connection"
+    },
+    "connectionCardSubtitle": {
+        "message": "Point the plugin at your LinShare server."
     },
     "serverUrlLabel": {
         "message": "Server URL"
@@ -60,7 +63,7 @@
         "message": "Enter your JWT token"
     },
     "rememberMeLabel": {
-        "message": "Remember me!"
+        "message": "Remember me on this device"
     },
     "checkAndSaveBtn": {
         "message": "Check & Save"
@@ -72,28 +75,46 @@
         "message": "Version"
     },
     "usedSpaceLabel": {
-        "message": "Used Space"
+        "message": "Storage used"
     },
     "resetBtn": {
         "message": "Reset"
     },
+    "signOutAndReset": {
+        "message": "Sign out & reset settings"
+    },
     "messageLabel": {
-        "message": "Message"
+        "message": "Default share message"
     },
     "preferencesHeader": {
-        "message": "Preferences"
+        "message": "Sharing preferences"
+    },
+    "prefsCardSubtitle": {
+        "message": "Applied to every share you send from Thunderbird."
+    },
+    "prefsSectionNotifications": {
+        "message": "Notifications & security"
     },
     "receiptSharingLabel": {
         "message": "Receive a sharing receipt"
     },
+    "prefSharingReceiptDesc": {
+        "message": "Get a confirmation email when the share is created."
+    },
     "receiptNonDownloadLabel": {
-        "message": "Receive a non-download receipt"
+        "message": "Notify me when recipients don't download"
+    },
+    "prefNoDownloadDesc": {
+        "message": "LinShare emails you if a share goes unviewed."
     },
     "secureShareLabel": {
-        "message": "Secure the sharing"
+        "message": "Secure the share with a one-time link"
+    },
+    "prefSecureShareDesc": {
+        "message": "Recipients get a tokenised URL instead of a permanent one."
     },
     "updateBtn": {
-        "message": "Update"
+        "message": "Save preferences"
     },
     "footerLine1": {
         "message": "You are using the Open Source and free version of LinShare™, powered by LINAGORA © 2009–2025."
@@ -136,6 +157,12 @@
     },
     "errSettingsResetFailed": {
         "message": "ERROR: Unable to reset settings"
+    },
+    "uploadOverlayTitle": {
+        "message": "Sharing with LinShare"
+    },
+    "uploadOverlayFinalizing": {
+        "message": "Finalising share…"
     },
     "uploadFailed": {
         "message": "Upload failed"

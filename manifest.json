@@ -21,8 +21,8 @@
     "open_in_tab": true
   },
   "compose_action": {
-    "default_title": "Envoyer via LinShare",
-    "default_icon": "assets/linshare.png"
+    "default_title": "__MSG_shareButton__",
+    "default_icon": "assets/share-send.svg"
   },
   "author": "Linagora",
   "description": "__MSG_extensionDescription__",
@@ -43,7 +43,7 @@
     "<all_urls>"
   ],
   "name": "__MSG_extensionName__",
-  "version": "3.0.1-SNAPSHOT"
+  "version": "3.0.1-SNAPSHOT",
   "experiment_apis": {
     "linshareExtAPI": {
       "schema": "schema.json",

@@ -141,7 +141,7 @@
                   <file>manifest.json</file>
                   <replacements>
                     <replacement>
-                        <token>"version":.*</token>
+                        <token>"version":\s*"[^"]*"</token>
                         <value>"version": "${project.version}"</value>
                     </replacement>
                   </replacements>
@@ -191,7 +191,7 @@
                   <file>manifest.json</file>
                   <replacements>
                     <replacement>
-                        <token>"version":.*</token>
+                        <token>"version":\s*"[^"]*"</token>
                         <value>"version": "${project.version}"</value>
                     </replacement>
                   </replacements>

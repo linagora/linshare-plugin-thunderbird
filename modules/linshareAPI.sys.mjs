@@ -126,8 +126,11 @@ export const LinshareAPI = {
     formData.append("filename", file.name);
     formData.append("file", file);
     formData.append("filesize", file.size);
+    // Don't set Content-Type for multipart bodies: XHR (and fetch) generate
+    // the header including the boundary parameter when given a FormData
+    // body. Setting it manually strips the boundary and produces a
+    // malformed request that some servers reject.
     headers.delete("Content-Type");
-    headers.append("Content-Type", "multipart/form-data");
 
     if (ctype == "application/json") {
       headers.append("Accept", "application/json");

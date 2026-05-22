@@ -4,3 +4,5 @@ target
 .settings
 linshare.xpi
 .prettierrc
+.superpowers/
+docs/superpowers/

@@ -8,6 +8,55 @@ console.log("LinShare: Initializing...");
 let LinshareAPI = null;
 let userProfile = null;
 
+// Resolve a usable Services object once, with fallbacks for whatever
+// the current Thunderbird actually exposes:
+//   1. The ambient `Services` global (available in chrome scopes on many
+//      versions).
+//   2. Importing `Services.sys.mjs` from gre (works on older TB, removed
+//      in some 14x builds).
+//   3. A minimal stub built directly from Components — `getProtocolHandler`
+//      and `newURI` are all we need.
+// This function is called lazily so a ReferenceError on undefined globals
+// is caught and we move to the next strategy.
+function resolveServices() {
+  try {
+    if (typeof Services !== "undefined" && Services && Services.io) {
+      console.log("LinShare: Using ambient Services global");
+      return Services;
+    }
+  } catch (e) { /* fall through */ }
+
+  try {
+    const mod = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
+    if (mod && mod.Services && mod.Services.io) {
+      console.log("LinShare: Using Services from importESModule");
+      return mod.Services;
+    }
+  } catch (e) { /* fall through */ }
+
+  console.log("LinShare: Building Services stub from Components");
+  const Cc = Components.classes;
+  const Ci_ = Components.interfaces;
+  return {
+    io: Cc["@mozilla.org/network/io-service;1"].getService(Ci_.nsIIOService),
+  };
+}
+
+// Build a safe i18n getter from an extension object. `localeData.getMessage`
+// was removed in TB 140; try the known APIs in order, then no-op. Modules
+// have English fallback strings everywhere they call i18n(key, fallback).
+function makeI18nFn(extension) {
+  try {
+    const ld = extension && extension.localeData;
+    if (ld && typeof ld.getMessage === "function") return ld.getMessage.bind(ld);
+    if (ld && typeof ld.localizeMessage === "function") return ld.localizeMessage.bind(ld);
+    if (extension && typeof extension.localizeMessage === "function") {
+      return extension.localizeMessage.bind(extension);
+    }
+  } catch (e) { /* fall through */ }
+  return () => null;
+}
+
 // Fallback modules
 const fallbackAPI = {
   checkVersionAndCred: () => Promise.resolve({ ok: true }),
@@ -53,29 +102,10 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
 
     // Register resource alias
     try {
-      // Try multiple methods to load Services
-      let Services;
-      try {
-        const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
-        Services = module.Services;
-      } catch (e1) {
-        try {
-          // Fallback to old JSM import
-          const module = ChromeUtils.import("resource://gre/modules/Services.jsm");
-          Services = module.Services;
-        } catch (e2) {
-          // Fallback to Components
-          const Cc = Components.classes;
-          const Ci = Components.interfaces;
-          Services = {
-            io: Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-          };
-        }
-      }
-
-      const resProt = Services.io.getProtocolHandler("resource")
+      const svc = resolveServices();
+      const resProt = svc.io.getProtocolHandler("resource")
         .QueryInterface(Ci.nsIResProtocolHandler);
-      const modulesURI = Services.io.newURI(extension.rootURI.resolve("modules/"));
+      const modulesURI = svc.io.newURI(extension.rootURI.resolve("modules/"));
       resProt.setSubstitution("linshare-modules", modulesURI);
       console.log("LinShare: Resource alias 'linshare-modules' registered to", modulesURI.spec);
     } catch (e) {
@@ -111,23 +141,24 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
 
         // Inject Services into modules
         if (Services) {
+          const i18nFn = makeI18nFn(extension);
           const prefModule = ChromeUtils.importESModule("resource://linshare-modules/preferences.sys.mjs");
           if (prefModule.setServices) prefModule.setServices(Services);
 
           if (profileModule.setServices) profileModule.setServices(Services);
-          if (profileModule.setI18n) profileModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+          if (profileModule.setI18n) profileModule.setI18n(i18nFn);
 
           const apiModule = ChromeUtils.importESModule("resource://linshare-modules/linshareAPI.sys.mjs");
           if (apiModule.setServices) apiModule.setServices(Services);
-          if (apiModule.setI18n) apiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+          if (apiModule.setI18n) apiModule.setI18n(i18nFn);
 
           const utilsModule = ChromeUtils.importESModule("resource://linshare-modules/linshareUtils.sys.mjs");
           if (utilsModule.setServices) utilsModule.setServices(Services);
-          if (utilsModule.setI18n) utilsModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+          if (utilsModule.setI18n) utilsModule.setI18n(i18nFn);
 
           const uiModule = ChromeUtils.importESModule("resource://linshare-modules/TBUIHandlers.sys.mjs");
           if (uiModule.setServices) uiModule.setServices(Services);
-          if (uiModule.setI18n) uiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+          if (uiModule.setI18n) uiModule.setI18n(i18nFn);
 
           console.log("LinShare: Services and I18n injected into modules");
         } else {
@@ -163,24 +194,8 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
   onShutdown() {
     console.log("LinShare: Extension closed");
     try {
-      let Services;
-      try {
-        const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
-        Services = module.Services;
-      } catch (e1) {
-        try {
-          const module = ChromeUtils.import("resource://gre/modules/Services.jsm");
-          Services = module.Services;
-        } catch (e2) {
-          const Cc = Components.classes;
-          const Ci = Components.interfaces;
-          Services = {
-            io: Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-          };
-        }
-      }
-
-      const resProt = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+      const svc = resolveServices();
+      const resProt = svc.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
       resProt.setSubstitution("linshare-modules", null);
       console.log("LinShare: Resource alias 'linshare-modules' unregistered");
     } catch (e) {
@@ -207,54 +222,42 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
       console.log("LinShare: Extension rootURI:", extension ? extension.rootURI.spec : "null");
 
       try {
-        // Try multiple methods to load Services
-        let Services;
-        try {
-          const module = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs");
-          Services = module.Services;
-        } catch (e1) {
-          try {
-            const module = ChromeUtils.import("resource://gre/modules/Services.jsm");
-            Services = module.Services;
-          } catch (e2) {
-            const Cc = Components.classes;
-            const Ci = Components.interfaces;
-            Services = {
-              io: Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
-            };
-          }
-        }
-
-        const resProt = Services.io.getProtocolHandler("resource")
+        const svc = resolveServices();
+        const resProt = svc.io.getProtocolHandler("resource")
           .QueryInterface(Ci.nsIResProtocolHandler);
 
         if (!resProt.hasSubstitution("linshare-modules")) {
-          const modulesURI = Services.io.newURI(extension.rootURI.resolve("modules/"));
+          const modulesURI = svc.io.newURI(extension.rootURI.resolve("modules/"));
           resProt.setSubstitution("linshare-modules", modulesURI);
-          console.log("LinShare: Resource alias registered in getAPI");
+          console.log("LinShare: Resource alias registered in getAPI -> " + modulesURI.spec);
         }
 
         if (extension) {
-          console.log("LinShare: Attempting to load linshareAPI.sys.mjs via resource alias...");
+          const i18nFn = makeI18nFn(extension);
+
           const apiModule = ChromeUtils.importESModule("resource://linshare-modules/linshareAPI.sys.mjs");
           LinshareAPI = apiModule.LinshareAPI;
           console.log("LinShare: LinshareAPI loaded:", !!LinshareAPI);
 
-          console.log("LinShare: Attempting to load profileStorage.sys.mjs via resource alias...");
           const profileModule = ChromeUtils.importESModule("resource://linshare-modules/profileStorage.sys.mjs");
           userProfile = profileModule.userProfile;
           console.log("LinShare: userProfile loaded:", !!userProfile);
 
-          // Inject i18n into modules
-          if (profileModule.setI18n) profileModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
-
-          if (apiModule.setI18n) apiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
-
           const utilsModule = ChromeUtils.importESModule("resource://linshare-modules/linshareUtils.sys.mjs");
-          if (utilsModule.setI18n) utilsModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
-
           const uiModule = ChromeUtils.importESModule("resource://linshare-modules/TBUIHandlers.sys.mjs");
-          if (uiModule.setI18n) uiModule.setI18n(extension.localeData.getMessage.bind(extension.localeData));
+
+          // Inject Services into every module so they can use Services.prefs,
+          // Services.logins (password vault), etc. `svc` here is the full
+          // ambient Services on TB 115+, or a stub built from Components.
+          if (profileModule.setServices) profileModule.setServices(svc);
+          if (apiModule.setServices) apiModule.setServices(svc);
+          if (utilsModule.setServices) utilsModule.setServices(svc);
+          if (uiModule.setServices) uiModule.setServices(svc);
+
+          if (profileModule.setI18n) profileModule.setI18n(i18nFn);
+          if (apiModule.setI18n) apiModule.setI18n(i18nFn);
+          if (utilsModule.setI18n) utilsModule.setI18n(i18nFn);
+          if (uiModule.setI18n) uiModule.setI18n(i18nFn);
 
           console.log("LinShare: Real modules loaded successfully in getAPI");
         } else {
@@ -322,6 +325,15 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
             }
           };
 
+          const _overlayI18nFn = makeI18nFn(context.extension);
+          const overlayI18n = (key, fallback) => {
+            try {
+              return _overlayI18nFn(key) || fallback;
+            } catch (e) {
+              return fallback;
+            }
+          };
+
           const updateProgressUI = (window, fileName, current, total, percent) => {
             if (!window || !window.document) return;
             let doc = window.document;
@@ -331,66 +343,113 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
               overlay = doc.createElement("div");
               overlay.id = "linshare-progress-overlay";
               overlay.style.cssText = `
-                position: fixed; 
-                top: 50%; 
-                left: 50%; 
+                position: fixed;
+                top: 50%;
+                left: 50%;
                 transform: translate(-50%, -50%);
-                width: 400px; 
-                padding: 20px; 
-                background: #1E88E5;
-                border-radius: 8px;
-                box-shadow: 0 8px 24px rgba(30, 136, 229, 0.4); 
-                z-index: 9999; 
-                font-family: 'Segoe UI', Roboto, sans-serif;
-                color: #ffffff;
+                width: 380px;
+                background: #ffffff;
+                color: #0f172a;
+                border-radius: 14px;
+                box-shadow: 0 16px 48px rgba(11, 60, 100, 0.22), 0 2px 6px rgba(0, 0, 0, 0.06);
+                z-index: 9999;
+                font-family: -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+                overflow: hidden;
               `;
 
               let header = doc.createElement("div");
-              header.style.cssText = "display: flex; align-items: center; margin-bottom: 16px;";
+              header.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 16px 18px 14px;
+                border-bottom: 1px solid #eef2f6;
+              `;
 
-              // LinShare icon using SVG
               let icon = doc.createElement("div");
-              icon.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="white"/>
+              icon.innerHTML = `<svg width="22" height="22" viewBox="0 0 16 16" fill="none">
+                <path d="M12.2 12.4H4.1a2.8 2.8 0 0 1-.7-5.55A3.8 3.8 0 0 1 10.85 5.6 2.8 2.8 0 0 1 12.2 12.4z" stroke="#1E88E5" stroke-width="1.25" stroke-linejoin="round" fill="none"/>
+                <path d="M8 10.8V5.5M8 5.5L6.3 7.2M8 5.5l1.7 1.7" stroke="#1E88E5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
               </svg>`;
-              icon.style.cssText = "margin-right: 12px; display: flex; align-items: center;";
+              icon.style.cssText = "display: flex; align-items: center; flex-shrink: 0;";
               header.appendChild(icon);
 
-              let title = doc.createElement("div");
-              title.textContent = "LinShare Upload";
-              title.style.cssText = "font-weight: 600; font-size: 16px; flex: 1;";
-              header.appendChild(title);
+              let titleWrap = doc.createElement("div");
+              titleWrap.style.cssText = "flex: 1; min-width: 0;";
 
+              let title = doc.createElement("div");
+              title.textContent = overlayI18n("uploadOverlayTitle", "Sharing with LinShare");
+              title.style.cssText = "font-weight: 700; font-size: 14px; color: #0f172a; letter-spacing: -0.005em;";
+              titleWrap.appendChild(title);
+
+              let counter = doc.createElement("div");
+              counter.id = "linshare-progress-counter";
+              counter.style.cssText = "font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; font-variant-numeric: tabular-nums;";
+              titleWrap.appendChild(counter);
+
+              header.appendChild(titleWrap);
               overlay.appendChild(header);
+
+              let body = doc.createElement("div");
+              body.style.cssText = "padding: 14px 18px 16px;";
 
               let text = doc.createElement("div");
               text.id = "linshare-progress-text";
-              text.style.cssText = "font-size: 13px; margin-bottom: 12px; opacity: 0.95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;";
-              overlay.appendChild(text);
+              text.style.cssText = `
+                font-size: 13px;
+                color: #334155;
+                margin-bottom: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-weight: 500;
+              `;
+              body.appendChild(text);
 
               let progressContainer = doc.createElement("div");
-              progressContainer.style.cssText = "width: 100%; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; margin-bottom: 8px;";
+              progressContainer.style.cssText = `
+                width: 100%;
+                height: 6px;
+                background: #eef2f6;
+                border-radius: 999px;
+                overflow: hidden;
+                margin-bottom: 6px;
+              `;
 
               let progressBar = doc.createElement("div");
               progressBar.id = "linshare-progress-bar";
-              progressBar.style.cssText = "width: 0%; height: 100%; background: linear-gradient(90deg, #4CAF50 0%, #81C784 100%); transition: width 0.3s ease; border-radius: 4px;";
+              progressBar.style.cssText = `
+                width: 0%;
+                height: 100%;
+                background: linear-gradient(90deg, #1E88E5 0%, #38bdf8 100%);
+                transition: width 0.3s ease;
+                border-radius: 999px;
+              `;
               progressContainer.appendChild(progressBar);
-
-              overlay.appendChild(progressContainer);
+              body.appendChild(progressContainer);
 
               let percentText = doc.createElement("div");
               percentText.id = "linshare-progress-percent";
-              percentText.style.cssText = "text-align: center; font-size: 12px; opacity: 0.9;";
-              overlay.appendChild(percentText);
+              percentText.style.cssText = `
+                text-align: right;
+                font-size: 11.5px;
+                color: #94a3b8;
+                font-weight: 600;
+                font-variant-numeric: tabular-nums;
+              `;
+              body.appendChild(percentText);
 
+              overlay.appendChild(body);
               doc.body.appendChild(overlay);
             }
 
             let text = doc.getElementById("linshare-progress-text");
             let bar = doc.getElementById("linshare-progress-bar");
             let percentText = doc.getElementById("linshare-progress-percent");
+            let counter = doc.getElementById("linshare-progress-counter");
 
-            if (text) text.textContent = `Uploading ${fileName} (${current}/${total})`;
+            if (text) text.textContent = fileName;
+            if (counter) counter.textContent = `${current} / ${total}`;
             if (bar) bar.style.width = `${percent}%`;
             if (percentText) percentText.textContent = `${percent}%`;
           };
@@ -437,7 +496,11 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
             console.log("Sharing documents with recipients...");
             if (composeWin && composeWin.document) {
               let text = composeWin.document.getElementById("linshare-progress-text");
-              if (text) text.textContent = "Finalizing share...";
+              let bar = composeWin.document.getElementById("linshare-progress-bar");
+              let percentText = composeWin.document.getElementById("linshare-progress-percent");
+              if (text) text.textContent = overlayI18n("uploadOverlayFinalizing", "Finalising share…");
+              if (bar) bar.style.width = "100%";
+              if (percentText) percentText.textContent = "";
             }
 
             // Pass password to shareMulipleDocuments
@@ -482,10 +545,17 @@ var linshareExtAPI = class extends ExtensionCommon.ExtensionAPI {
           return { success: true, message: "Preferences saved successfully" };
         },
         prompt(type, title, msg) {
+          // `alert` is undefined in the parent-experiment scope; route through
+          // Services.prompt so the user actually sees errors instead of the
+          // silent no-op the old `alert()` call produced.
           console.log(`prompt: ${type} - ${title}: ${msg}`);
-          // Utilisation d'une alerte simple via console pour compatibilité
-          if (typeof alert !== 'undefined') {
-            alert(`${title}: ${msg}`);
+          try {
+            const svc = resolveServices();
+            if (svc && svc.prompt && typeof svc.prompt.alert === "function") {
+              svc.prompt.alert(null, title || "LinShare", msg || "");
+            }
+          } catch (e) {
+            console.error("LinShare: prompt failed:", e);
           }
         },
         sendMail() {

@@ -32,25 +32,8 @@ try {
   console.warn("Could not set icon/title:", error);
 }
 
-const configureComposeAction = async () => {
-  console.log("Configuring compose action...");
-  try {
-    if (browser.composeAction) {
-      await browser.composeAction.setTitle({
-        title: browser.i18n.getMessage("shareButton")
-      });
-      console.log("Compose action title set");
-    }
-  } catch (error) {
-    console.warn("Could not set compose action title:", error);
-  }
-};
-
-configureComposeAction();
-// Configuration du composeAction pour "Envoyer via LinShare"  
-console.log("Configuring Send via LinShare button...");
-// Configuration du composeAction pour "Envoyer via LinShare"
-console.log("Configuring Send via LinShare button...");
+// Compose-window button: title and icon come from manifest.json
+// (__MSG_shareButton__ / assets/share-send.svg). Wire up the click handler.
 if (browser.composeAction) {
   browser.composeAction.onClicked.addListener(async (tab) => {
     console.log("Send via LinShare button clicked for tab:", tab.id);

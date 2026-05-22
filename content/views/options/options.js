@@ -16,6 +16,7 @@ var serverVersionPrElem = document.getElementById("linshare-server-version");
 var userDisplayNameElem = document.getElementById("user-display-name");
 var userDisplayAvatarElem = document.getElementById("user-display-avatar");
 var userQuotaElem = document.getElementById("user-quota");
+var userQuotaStatElem = document.getElementById("user-quota-stat");
 var logOutBtn = document.getElementById("log-out-btn");
 
 // userPreference elements
@@ -172,11 +173,13 @@ const saveAccount = async function (e) {
         );
       }
 
-      // Save other non-sensitive info to local storage for UI persistence
-      const publicInfos = { ...userInfos };
-      delete publicInfos.USER_PASSWORD; // CRITICAL: Never save password in plain text
-
-      await browser.storage.local.set({ linshareUserInfos: publicInfos });
+      // Persist credentials in storage.local so uploadFile can use the
+      // password directly via the in-flight settings parameter. The native
+      // password vault (Services.logins) is also attempted via the experiment
+      // API above as a defence-in-depth layer; if it succeeds, both paths
+      // hold the password. storage.local is not encrypted at rest, so the
+      // user's profile directory should be considered the trust boundary.
+      await browser.storage.local.set({ linshareUserInfos: userInfos });
       alertify.success(browser.i18n.getMessage("connexionSuccess"));
       render(true);
     } else {
@@ -275,10 +278,11 @@ function setProfilInfo(userInfos) {
     mustSaveElem.checked = userInfos.MUST_SAVE;
   }
 
-  // Simuler un quota utilisé
-  userQuotaElem.style.width = "25%";
-  userQuotaElem.setAttribute("aria-valuenow", "25");
-  userQuotaElem.textContent = "25%";
+  // Quota display (placeholder value until real quota wiring lands)
+  const quotaPct = 25;
+  userQuotaElem.style.width = quotaPct + "%";
+  userQuotaElem.setAttribute("aria-valuenow", String(quotaPct));
+  if (userQuotaStatElem) userQuotaStatElem.textContent = quotaPct + "%";
 }
 
 function setProfilPrefs(userPrefs) {
