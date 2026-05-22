@@ -43,7 +43,7 @@
     "<all_urls>"
   ],
   "name": "__MSG_extensionName__",
-  "version": "3.0.1-SNAPSHOT",
+  "version": "3.0.1",
   "experiment_apis": {
     "linshareExtAPI": {
       "schema": "schema.json",
